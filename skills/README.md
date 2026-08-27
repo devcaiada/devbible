@@ -2,6 +2,9 @@
 
 Welcome to the **DevBible Skills Catalog**. This directory contains curated, battle-tested guides and architecture patterns organized by technical domain. Each guide highlights modern idioms, core patterns, state management strategies, security recommendations, and common pitfalls to avoid.
 
+> [!TIP]
+> **Using AI Coding Assistants (Claude Code, Codex, Gemini)?** Read our **[Community AI Skills & Best Practices Guide](community-skills-guide.md)** for an in-depth breakdown of `grill-me`, `prototype`, `frontend-design`, `systematic-debugging`, `tdd`, and how to build internal repo skills.
+
 ---
 
 ## 📂 Catalog Directory

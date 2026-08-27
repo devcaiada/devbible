@@ -170,6 +170,30 @@ A hand-picked selection of essential skills and utilities for 10x vibecoders usi
 
 ---
 
+## 🏆 Community Favorites & The Harsh Truth About AI Skills
+
+> 💡 **The Core Realization**: Most leaderboard skills *do not* drastically improve model outputs compared to writing a clear, unambiguous prompt. The real superpower lies in **automating repetitive workflows** and creating **internal, repository-specific skills** (e.g. *"how to build a new API endpoint in this exact codebase"*), rather than hoarding generic public skills that pollute agent context.
+
+For full architectural details and guides on building custom repo skills, see the **[Community Skills Guide](skills/community-skills-guide.md)**.
+
+### 📊 Community Skills Summary Table
+
+| Skill / Command | Purpose & Workflow | Official / Ecosystem Source |
+| :--- | :--- | :--- |
+| **`grill-me`** | Interrogates the dev via a structured design tree before writing code | [mattpocock/skills](https://github.com/mattpocock/skills) |
+| **`prototype`** | Builds throwaway sandbox prototypes to validate UI/logic fast | [mattpocock/skills](https://github.com/mattpocock/skills) |
+| **`frontend-design`** | 3-step design process (Brainstorm ➔ Review ➔ Implementation) | [anthropics/claude-code](https://github.com/anthropics/claude-code) |
+| **`skill-creator`** | Meta-prompt framework for building bespoke repository skills | [anthropics/skills](https://github.com/anthropics/skills) |
+| **`systematic-debugging`** | 4-phase root-cause analysis (Investigate ➔ Pattern ➔ Test ➔ Patch) | Community Standard |
+| **`tdd`** | Enforces Red ➔ Green ➔ Refactor test-driven cycles | Community Standard |
+| **`triage`** | Converts chaotic bug/feature brainstorms into crisp agent briefs | Community Standard |
+| **`handoff`** | Serializes and compacts session context to pass to fresh subagents | Community Standard |
+| **`improve-architecture`** | Evaluates modularity, coupling, and clean architecture heuristics | Community Standard |
+| **`review`** | Native pre-commit & PR git diff reviewer (built-in) | Pre-installed in Claude Code |
+| **`find-skills`** | Marketplace search *(⚠️ Caution: risk of context bloat)* | Community Ecosystem |
+
+---
+
 ## 🔄 The Production Delivery Lifecycle
 
 ```mermaid
