@@ -1,0 +1,13 @@
+{
+  "ignorePatterns": [
+    {
+      "pattern": "^https://example.com"
+    },
+    {
+      "pattern": "^https://myapp.com"
+    }
+  ],
+  "timeout": "10s",
+  "retryOn429": true,
+  "aliveStatusCodes": [200, 206, 301, 302, 307, 308]
+}

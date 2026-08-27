@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 GitHub Discussions & Community Q&A
+    url: https://github.com/devcaiada/devbible/discussions
+    about: Ask questions, share your stack setup, or discuss production architecture patterns with other vibecoders.
