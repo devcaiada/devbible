@@ -25,6 +25,151 @@ DevBible bridges that gap by providing:
 
 ---
 
+## ⚡ Top Favorite AI Skills & Power Tools
+
+A hand-picked selection of essential skills and utilities for 10x vibecoders using **Claude Code**, **Codex**, and **Gemini / Antigravity**.
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 🧠 AI Coding Power Stack                                                    │
+├─────────────────┬───────────────────┬───────────────────────────────────────┤
+│ Tool / Skill    │ Primary Purpose   │ Target Agents                         │
+├─────────────────┼───────────────────┼───────────────────────────────────────┤
+│ 1. OmniRoute    │ AI Model Gateway  │ Claude Code · Codex · Gemini          │
+│ 2. Claude Code  │ Terminal Coding   │ Claude Code · Codex · Gemini          │
+│ 3. Claude-Mem   │ Long-Term Memory  │ Claude Code · Codex · Gemini          │
+│ 4. Grill-Me     │ Spec & Plan Align │ Claude Code · Codex · Gemini          │
+│ 5. Headroom     │ Token Compression │ Claude Code · Codex · Gemini          │
+└─────────────────┴───────────────────┴───────────────────────────────────────┘
+```
+
+---
+
+### 1. 🌐 [OmniRoute](https://github.com/diegosouzapw/OmniRoute)
+> **Universal local AI gateway & model routing proxy.** Connects your coding assistants to 100+ LLMs with automatic fallbacks, rate limit aggregation across free provider tiers, and automated token compression.
+
+- **Claude Code**:
+  ```bash
+  # Start local OmniRoute gateway
+  npx omniroute start
+  # Point Claude Code to OmniRoute local endpoint
+  export ANTHROPIC_BASE_URL="http://localhost:20128/v1"
+  ```
+- **Codex**:
+  ```bash
+  # Set OpenAI compatible base URL in your environment or ~/.codex/config.json
+  export OPENAI_BASE_URL="http://localhost:20128/v1"
+  ```
+- **Gemini / Antigravity**:
+  ```bash
+  # Configure custom endpoint in Gemini / Antigravity settings or skill proxy
+  export GEMINI_API_BASE="http://localhost:20128/v1"
+  ```
+- **🔗 GitHub**: [github.com/diegosouzapw/OmniRoute](https://github.com/diegosouzapw/OmniRoute)
+
+---
+
+### 2. 🤖 [Claude Code Setup](https://github.com/anthropics/claude-code)
+> **Agentic terminal coding environment.** Operates directly inside your repository terminal to understand architecture, run tests, fix bugs, and automate Git workflows with deep MCP integration.
+
+- **Claude Code**:
+  ```bash
+  npm install -g @anthropic-ai/claude-code
+  claude
+  # Add CLAUDE.md context to your repo root
+  ```
+- **Codex**:
+  ```bash
+  # Configure Codex CLI to emulate Claude Code workspace indexing conventions
+  npx @anthropic-ai/claude-code --print-config >> ~/.codex/config.json
+  ```
+- **Gemini / Antigravity**:
+  ```bash
+  # Use Antigravity / Gemini terminal agents with CLAUDE.md & AGENTS.md conventions
+  agy --mode agent
+  ```
+- **🔗 GitHub**: [github.com/anthropics/claude-code](https://github.com/anthropics/claude-code)
+
+---
+
+### 3. 🧠 [Claude-Mem](https://github.com/thedotmack/claude-mem)
+> **Persistent episodic memory layer.** Automatically records session decisions, architecture insights, and user preferences into a local SQLite FTS5 database, injecting relevant historical memory into future agent sessions.
+
+- **Claude Code**:
+  ```bash
+  # Install via npx
+  npx claude-mem install
+  # Or via plugin marketplace
+  /plugin marketplace add thedotmack/claude-mem
+  /plugin install claude-mem
+  ```
+- **Codex**:
+  ```bash
+  # Hook memory sync into Codex workspace
+  npx claude-mem --agent codex
+  ```
+- **Gemini / Antigravity**:
+  ```bash
+  # Register claude-mem MCP server in Gemini / Antigravity config (~/.gemini/antigravity/mcp_config.json)
+  npx claude-mem install --gemini
+  ```
+- **🔗 GitHub**: [github.com/thedotmack/claude-mem](https://github.com/thedotmack/claude-mem)
+
+---
+
+### 4. 🎯 [Grill-Me](https://github.com/mattpocock/skills)
+> **Interactive design & scope interrogator by Matt Pocock.** Before generating any code, this skill interrogates you with targeted questions across the "design tree" (architecture, schemas, edge cases) to prevent misunderstood requirements.
+
+- **Claude Code**:
+  ```bash
+  npx skills add https://github.com/mattpocock/skills --skill grill-me
+  # Then invoke in chat:
+  /grill-me
+  ```
+- **Codex**:
+  ```bash
+  # Copy grill-me prompt instructions into .codex/rules or .codex/skills/grill-me.md
+  curl -s https://raw.githubusercontent.com/mattpocock/skills/main/skills/grill-me/SKILL.md -o .codex/skills/grill-me.md
+  ```
+- **Gemini / Antigravity**:
+  ```bash
+  # Place into Antigravity builtin or global skills directory
+  mkdir -p ~/.gemini/antigravity/skills/grill-me
+  curl -s https://raw.githubusercontent.com/mattpocock/skills/main/skills/grill-me/SKILL.md -o ~/.gemini/antigravity/skills/grill-me/SKILL.md
+  # Then trigger in chat with /grill-me
+  ```
+- **🔗 GitHub**: [github.com/mattpocock/skills](https://github.com/mattpocock/skills)
+
+---
+
+### 5. ⚡ [Headroom](https://github.com/headroomlabs-ai/headroom)
+> **Real-time token & context compression layer.** Slashes token consumption by 60–95% on JSON payloads and 15–20% on codebase reads using AST-aware compression with lossless, reversible caching (CCR).
+
+- **Claude Code**:
+  ```bash
+  # Wrap Claude Code directly
+  headroom wrap claude
+  # Or run Headroom proxy
+  headroom proxy --port 8787
+  export ANTHROPIC_BASE_URL="http://localhost:8787"
+  ```
+- **Codex**:
+  ```bash
+  # Wrap Codex CLI or proxy OpenAI requests
+  headroom wrap codex
+  export OPENAI_BASE_URL="http://localhost:8787/v1"
+  ```
+- **Gemini / Antigravity**:
+  ```bash
+  # Install Headroom MCP server for lossless retrieval
+  headroom mcp install
+  # Or wrap Gemini CLI
+  headroom wrap gemini
+  ```
+- **🔗 GitHub**: [github.com/headroomlabs-ai/headroom](https://github.com/headroomlabs-ai/headroom)
+
+---
+
 ## 🔄 The Production Delivery Lifecycle
 
 ```mermaid

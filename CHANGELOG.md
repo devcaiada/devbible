@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - High-performance Pino and Python structlog JSON loggers.
   - Production-ready Docker Compose stack with PostgreSQL, Redis, and Caddy SSL reverse proxy.
 - **Examples & Resources**:
+  - Featured AI Skills power stack guide (`OmniRoute`, `Claude Code`, `Claude-Mem`, `Grill-Me`, `Headroom`) with install instructions for Claude Code, Codex, and Gemini.
   - API response wrapper & custom error classes.
   - Request-scoped correlation ID logger middleware.
   - Curated developer tools, hosting providers, and recommended engineering books/courses.
