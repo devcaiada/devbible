@@ -1,0 +1,40 @@
+{
+  "name": "devbible",
+  "version": "1.0.0",
+  "description": "The ultimate open-source production-readiness checklist, skills reference, and automated codebase auditor for vibecoders and modern builders.",
+  "main": "bin/devbible.js",
+  "bin": {
+    "devbible": "./bin/devbible.js"
+  },
+  "type": "commonjs",
+  "scripts": {
+    "audit": "node ./bin/devbible.js audit",
+    "list": "node ./bin/devbible.js list",
+    "test": "node ./bin/devbible.js audit ."
+  },
+  "keywords": [
+    "devbible",
+    "production-ready",
+    "checklist",
+    "audit",
+    "vibecoder",
+    "codebase-audit",
+    "best-practices",
+    "error-handling",
+    "logging",
+    "security"
+  ],
+  "author": "DevBible Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devcaiada/devbible.git"
+  },
+  "bugs": {
+    "url": "https://github.com/devcaiada/devbible/issues"
+  },
+  "homepage": "https://github.com/devcaiada/devbible#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

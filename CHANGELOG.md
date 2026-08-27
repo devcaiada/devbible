@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🚀 Initial Public Release
 
 #### Added
+- **Automated CLI & Agent Skill**:
+  - `devbible` CLI binary (`bin/devbible.js`) with `audit`, `list`, `info`, and `scaffold` commands.
+  - Native Agent Skill `devbible-audit` (`skills/devbible-audit/SKILL.md`) for automated project audits in Claude Code, Codex, and Gemini/Antigravity.
 - **20-Item Production-Readiness Checklist**:
   - Comprehensive guides covering Error Handling, Logging, DB Backups, Staging, Monitoring, Analytics, Rate Limiting, RBAC Access Control, Password Reset, Loading States, Error States, Responsiveness, Backend Validation, Migrations, Rollback Strategy, Testing, Privacy Policy, Terms of Service, Image Compression, and 404 Routing.
 - **Curated Skills Catalog**:

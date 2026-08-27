@@ -19,13 +19,52 @@
 **DevBible** is an opinionated, practical development reference created for modern full-stack developers, indie hackers, and vibecoders. In the era of rapid AI-assisted development, speed is easy — but shipping **reliable**, **secure**, and **scalable** software is where most builders struggle.
 
 DevBible bridges that gap by providing:
-1. **[Production-Readiness Checklist](checklist/README.md)**: 20+ comprehensive verification items covering everything from error boundaries and database migrations to rate limiting and privacy policies.
-2. **[Project Review Checklist Template](checklist/PROJECT-REVIEW-CHECKLIST.md)**: A copyable markdown audit sheet to review and sign off on your projects before launch.
-3. **[Production Maturity Framework](checklist/MATURITY-LEVELS.md)**: A 3-tier roadmap (MVP -> Growth -> Enterprise) with copyable readiness badges.
-4. **[Skills Catalog](skills/README.md)**: Curated guides and best practices across modern Frontend, Backend, DevOps, and Database ecosystems.
-5. **[Reusable Templates](templates/)**: Drop-in production configurations for logging, error handling, Docker Compose, and environment variables.
-6. **[Practical Examples](examples/)**: Real-world code implementations demonstrating good vs. bad patterns.
-7. **[Curated Resources](resources/)**: Battle-tested tools, libraries, books, and courses.
+1. **[DevBible CLI Auditor](bin/devbible.js)**: Run `npx devbible audit` to scan your repository in seconds and receive an instant production-readiness scorecard.
+2. **[DevBible Agent Skill](skills/devbible-audit/SKILL.md)**: Native skill for Claude Code, Codex, and Gemini to audit codebases and scaffold missing production boilerplate.
+3. **[Production-Readiness Checklist](checklist/README.md)**: 20+ comprehensive verification items covering everything from error boundaries and database migrations to rate limiting and privacy policies.
+4. **[Project Review Checklist Template](checklist/PROJECT-REVIEW-CHECKLIST.md)**: A copyable markdown audit sheet to review and sign off on your projects before launch.
+5. **[Production Maturity Framework](checklist/MATURITY-LEVELS.md)**: A 3-tier roadmap (MVP -> Growth -> Enterprise) with copyable readiness badges.
+6. **[Skills Catalog](skills/README.md)**: Curated guides and best practices across modern Frontend, Backend, DevOps, and Database ecosystems.
+7. **[Reusable Templates](templates/)**: Drop-in production configurations for logging, error handling, Docker Compose, and environment variables.
+8. **[Practical Examples](examples/)**: Real-world code implementations demonstrating good vs. bad patterns.
+9. **[Curated Resources](resources/)**: Battle-tested tools, libraries, books, and courses.
+
+---
+
+## 🛠️ Quick Start: Automated CLI & Agent Skill
+
+Audit your codebase in seconds without manually checking 20 documents.
+
+### 1. Run the DevBible CLI
+```bash
+# Scan current repository and get an instant production readiness score
+npx devbible audit
+
+# List all 20 checklist items & maturity levels
+npx devbible list
+
+# Scaffold a production template directly into your project
+npx devbible scaffold pino-logger
+npx devbible scaffold express-error-handler
+npx devbible scaffold docker-compose
+```
+
+### 2. Install the DevBible Agent Skill
+Equip your AI coding agent with the `/devbible:audit` and `/devbible:scaffold` commands:
+
+- **Claude Code**:
+  ```bash
+  npx skills add https://github.com/devcaiada/devbible --skill devbible-audit
+  ```
+- **Gemini / Antigravity**:
+  ```bash
+  mkdir -p ~/.gemini/antigravity/skills/devbible-audit
+  curl -s https://raw.githubusercontent.com/devcaiada/devbible/main/skills/devbible-audit/SKILL.md -o ~/.gemini/antigravity/skills/devbible-audit/SKILL.md
+  ```
+- **Codex**:
+  ```bash
+  curl -s https://raw.githubusercontent.com/devcaiada/devbible/main/skills/devbible-audit/SKILL.md -o .codex/skills/devbible-audit.md
+  ```
 
 ---
 
