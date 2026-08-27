@@ -1,4 +1,8 @@
-# DevBible 📚✨
+# DevBible 🛡️
+
+<p align="center">
+  <img src="assets/images/devbible_cover.png" alt="DevBible - The Ultimate Development Checklist & Guide for Vibecoders" width="100%" />
+</p>
 
 > The ultimate open-source development reference built by and for vibecoders and modern builders. Ship robust, production-ready applications without reinventing the wheel.
 

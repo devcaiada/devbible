@@ -1,4 +1,4 @@
-# Contributing to DevBible 📚✨
+# Contributing to DevBible 🛡️
 
 Thank you for your interest in contributing to **DevBible**! DevBible is a community-driven development reference, and your real-world production insights help make it better for every developer.
 
