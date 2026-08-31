@@ -22,13 +22,14 @@ DevBible bridges that gap by providing:
 1. **[DevBible CLI Auditor](bin/devbible.js)**: Run `npx devbible audit` to scan your repository in seconds and receive an instant production-readiness scorecard.
 2. **[DevBible Agent Skill](skills/devbible-audit/SKILL.md)**: Native skill for Claude Code, Codex, and Gemini to audit codebases and scaffold missing production boilerplate.
 3. **[SaaS Security Audit Prompt](resources/security-audit-prompt.md)**: A copy-paste agent prompt to audit 5 critical vulnerability vectors, generate an executive PDF report, and create GitHub Issues.
-4. **[Production-Readiness Checklist](checklist/README.md)**: 20+ comprehensive verification items covering everything from error boundaries and database migrations to rate limiting and privacy policies.
-5. **[Project Review Checklist Template](checklist/PROJECT-REVIEW-CHECKLIST.md)**: A copyable markdown audit sheet to review and sign off on your projects before launch.
-6. **[Production Maturity Framework](checklist/MATURITY-LEVELS.md)**: A 3-tier roadmap (MVP -> Growth -> Enterprise) with copyable readiness badges.
-7. **[Skills Catalog](skills/README.md)**: Curated guides and best practices across modern Frontend, Backend, DevOps, and Database ecosystems.
-8. **[Reusable Templates](templates/)**: Drop-in production configurations for logging, error handling, Docker Compose, and environment variables.
-9. **[Practical Examples](examples/)**: Real-world code implementations demonstrating good vs. bad patterns.
-10. **[Curated Resources](resources/)**: Battle-tested tools, libraries, books, and courses.
+4. **[Codebase Cleanup & Debt Eradication Prompt](resources/codebase-cleanup-prompt.md)**: A copy-paste prompt to aggressively eliminate dead code, duplicate logic, and tech debt.
+5. **[Production-Readiness Checklist](checklist/README.md)**: 20+ comprehensive verification items covering everything from error boundaries and database migrations to rate limiting and privacy policies.
+6. **[Project Review Checklist Template](checklist/PROJECT-REVIEW-CHECKLIST.md)**: A copyable markdown audit sheet to review and sign off on your projects before launch.
+7. **[Production Maturity Framework](checklist/MATURITY-LEVELS.md)**: A 3-tier roadmap (MVP -> Growth -> Enterprise) with copyable readiness badges.
+8. **[Skills Catalog](skills/README.md)**: Curated guides and best practices across modern Frontend, Backend, DevOps, and Database ecosystems.
+9. **[Reusable Templates](templates/)**: Drop-in production configurations for logging, error handling, Docker Compose, and environment variables.
+10. **[Practical Examples](examples/)**: Real-world code implementations demonstrating good vs. bad patterns.
+11. **[Curated Resources](resources/)**: Battle-tested tools, libraries, books, and courses.
 
 ---
 
@@ -134,6 +135,55 @@ GERAÇÃO DO PDF — REGRAS TÉCNICAS:
 - Páginas A4, margens ~2cm, cabeçalho/rodapé com nome do relatório e número de página.
 
 Me entregue ao final: o relatório em PDF, a lista de achados no chat (arquivo por arquivo, linha por linha) e o caminho de todos os arquivos gerados.
+```
+</details>
+
+---
+
+## 🧹 Aggressive Codebase Cleanup & Debt Eradication Prompt (Copy & Paste)
+
+> ⚡ **Clean up AI prototyping mess and delete dead code safely.** Rapid AI coding helps vibecoders build fast, but often accumulates unused components, dead imports, duplicate utilities, and abandoned files. Copy and paste this prompt into **Claude Code**, **Cursor**, **Antigravity / Gemini**, **VS Code**, or **Codex** to run an aggressive yet safe code cleanup and technical debt audit.
+
+📖 Read the full guide & execution protocol in **[resources/codebase-cleanup-prompt.md](resources/codebase-cleanup-prompt.md)**.
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 🧹 8 Codebase Cleanup & Simplification Vectors                              │
+├─────────────────┬───────────────────────────────────────────────────────────┤
+│ 1. Dead Code    │ Unused functions, routes, APIs, variables, and imports    │
+│ 2. Duplication  │ Copy-pasted logic, repetitive helpers, redundant utils    │
+│ 3. Orphaned UI  │ Unrendered React/Vue components and dead style tokens     │
+│ 4. Over-Complex │ Over-engineered abstractions that can be simplified       │
+│ 5. Legacy Code  │ Deprecated shims, outdated polyfills, unused endpoints    │
+│ 6. Redundant IO │ Duplicate DB queries, un-cached network fetches           │
+│ 7. Abandoned    │ Disconnected files, orphaned assets, scratch scripts      │
+│ 8. Tech Debt    │ Brittle patterns, anti-patterns, missing type safety      │
+└─────────────────┴───────────────────────────────────────────────────────────┘
+```
+
+<details open>
+<summary><b>📋 Click to View / Copy the Complete Codebase Cleanup Prompt</b></summary>
+
+```markdown
+Analyze the entire codebase and identify:
+
+1. Dead code (unused functions, files, components, routes, APIs, variables, imports, and dependencies)
+2. Duplicate logic that should be consolidated
+3. Unused UI components
+4. Overlay complex implementations that can be simplified
+5. Legacy code that is no longer needed
+6. Redundant database queries or APIs calls
+7. Files that appear abandoned or disconnected from the application
+8. Opportunities to reduce technical debt
+
+For each issue:
+
+* Explains why it is unnecessary
+* Estimate the impact of removing it
+* Identify any risks before deletion
+* Provide a recommended cleanup plan
+
+Be aggressive but safe. Assume the goal is to simplify the codebase, improve maintainability, and remove anything that does not provide value.
 ```
 </details>
 

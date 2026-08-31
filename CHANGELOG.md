@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Production-ready Docker Compose stack with PostgreSQL, Redis, and Caddy SSL reverse proxy.
 - **Examples & Resources**:
   - Ultimate SaaS Security Audit Prompt guide (`resources/security-audit-prompt.md`) with copy-paste instructions for Claude Code, Cursor, Antigravity, VS Code, and Codex.
+  - Aggressive Codebase Cleanup & Debt Eradication Prompt (`resources/codebase-cleanup-prompt.md`) for eliminating dead code, duplicate logic, and abandoned assets.
   - Featured AI Skills power stack guide (`OmniRoute`, `Claude Code`, `Claude-Mem`, `Grill-Me`, `Headroom`) with install instructions for Claude Code, Codex, and Gemini.
   - Community AI Skills guide & analysis (`skills/community-skills-guide.md`) covering `grill-me`, `prototype`, `frontend-design`, `skill-creator`, `systematic-debugging`, `tdd`, `triage`, `handoff`, `improve-architecture`, and `review`.
   - API response wrapper & custom error classes.
