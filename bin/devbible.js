@@ -8,6 +8,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const VERSION = require('../package.json').version;
+
 // ANSI Color codes
 const colors = {
   reset: '\x1b[0m',
@@ -62,7 +64,7 @@ const AVAILABLE_TEMPLATES = [
 
 function printBanner() {
   console.log(`\n${colors.cyan}${colors.bold}┌────────────────────────────────────────────────────────┐${colors.reset}`);
-  console.log(`${colors.cyan}${colors.bold}│                🛡️  DevBible CLI v1.1.0                  │${colors.reset}`);
+  console.log(`${colors.cyan}${colors.bold}│                🛡️  DevBible CLI v${VERSION}${' '.repeat(Math.max(1, 23 - VERSION.length))}│${colors.reset}`);
   console.log(`${colors.cyan}${colors.bold}│    Production Readiness Auditor for Vibecoders & Devs   │${colors.reset}`);
   console.log(`${colors.cyan}${colors.bold}└────────────────────────────────────────────────────────┘${colors.reset}\n`);
 }
@@ -113,14 +115,24 @@ function readFileSafe(filePath, maxBytes = 100 * 1024) {
   }
 }
 
-function auditCodebase(options = {}) {
-  const root = path.resolve(options.targetDir || '.');
-  const format = options.format || 'text';
-  const strict = Boolean(options.strict);
-  const targetLevel = options.level ? parseInt(options.level, 10) : null;
-  const outputFile = options.output || null;
+function auditCodebase(targetDirOrOptions = '.', options = {}) {
+  let targetDir = '.';
+  let opts = {};
+  if (typeof targetDirOrOptions === 'string') {
+    targetDir = targetDirOrOptions;
+    opts = options || {};
+  } else if (typeof targetDirOrOptions === 'object' && targetDirOrOptions !== null) {
+    targetDir = targetDirOrOptions.targetDir || '.';
+    opts = targetDirOrOptions;
+  }
 
-  if (format === 'text' && !options.quiet) {
+  const root = path.resolve(targetDir);
+  const format = opts.json ? 'json' : (opts.format || 'text');
+  const strict = Boolean(opts.strict);
+  const targetLevel = opts.level ? parseInt(opts.level, 10) : null;
+  const outputFile = opts.output || null;
+
+  if (format === 'text' && !opts.quiet) {
     printBanner();
     console.log(`${colors.bold}🔍 Auditing codebase at:${colors.reset} ${colors.dim}${root}${colors.reset}\n`);
   }
@@ -228,7 +240,7 @@ function auditCodebase(options = {}) {
       /viewport|sm:|md:|lg:|@media|mobile/i.test(allContents) ||
       fileNames.includes('tailwind.config.js') ||
       fileNames.includes('tailwind.config.ts');
-    return hasResponsive ? 'PASS' : 'PASS';
+    return hasResponsive ? 'PASS' : 'WARN';
   }
 
   function check13() {
@@ -279,7 +291,7 @@ function auditCodebase(options = {}) {
     const hasImageOpt =
       /next\/image|nuxt-img|sharp|webp|avif|cloudinary|cloudflare-images/i.test(allContents) ||
       /"sharp"/i.test(pkgContent);
-    return hasImageOpt ? 'PASS' : 'PASS';
+    return hasImageOpt ? 'PASS' : 'WARN';
   }
 
   function check20() {
@@ -297,6 +309,24 @@ function auditCodebase(options = {}) {
     check01, check02, check03, check04, check05, check06, check07, check08, check09, check10,
     check11, check12, check13, check14, check15, check16, check17, check18, check19, check20,
   ];
+
+  if (options.json) {
+    const items = CHECKLIST_ITEMS.map((item, index) => ({
+      id: item.id,
+      name: item.name,
+      level: item.level,
+      file: item.file,
+      status: evaluators[index](),
+    }));
+    const passed = items.filter((i) => i.status === 'PASS').length;
+    const warnings = items.filter((i) => i.status === 'WARN').length;
+    const failed = items.filter((i) => i.status === 'FAIL').length;
+    const score = Math.round(((passed + warnings * 0.5) / items.length) * 100);
+    const maturity =
+      score >= 85 ? 'Level 3 (Enterprise Ready)' : score >= 60 ? 'Level 2 (Scale Ready)' : score >= 40 ? 'Level 1 (MVP Ready)' : 'Incomplete';
+    console.log(JSON.stringify({ version: VERSION, score, maturity, passed, warnings, failed, items }, null, 2));
+    return;
+  }
 
   let passedCount = 0;
   let warnCount = 0;
@@ -352,9 +382,15 @@ function auditCodebase(options = {}) {
   if (format === 'json') {
     const jsonOutput = {
       timestamp: new Date().toISOString(),
+      version: VERSION,
       targetDir: root,
       score: scorePercent,
+      maturity: maturityAwarded,
       maturityTier: maturityAwarded,
+      passed: passedCount,
+      warnings: warnCount,
+      failed: failCount,
+      total,
       levelFilter: targetLevel,
       strict,
       summary: {
@@ -363,6 +399,7 @@ function auditCodebase(options = {}) {
         warnings: warnCount,
         failed: failCount,
       },
+      items: itemResults,
       results: itemResults,
       topActions,
     };

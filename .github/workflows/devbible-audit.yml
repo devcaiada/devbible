@@ -1,0 +1,23 @@
+name: DevBible Audit
+
+# Dogfooding: this repository audits itself with its own GitHub Action.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  audit:
+    name: Production-readiness audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run DevBible audit
+        uses: ./
+        with:
+          fail-under: '50'

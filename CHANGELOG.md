@@ -7,17 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.1.0] - 2026-10-15
+## [1.2.0] - 2026-10-15
 
-### 🚀 CI/CD Automation & Expanded Boilerplates
+### 🚀 Golden Shark 404 & Expanded Boilerplates
 
 #### Added
-- **CLI CI/CD Capabilities**:
+- **Golden Shark 404 Experience**:
+  - Full-featured, responsive, dark-mode `404.html` and Next.js App Router `app/not-found.tsx` with Golden Shark Level 3 branding.
+  - High-resolution 3D mascot artwork (`assets/images/404_golden_shark.png`).
+  - Added `404-page` and `next-not-found` to `devbible scaffold`.
+  - Achieved **100% Production Readiness Score (20/20 PASS)** on DevBible itself.
+- **CLI Capabilities**:
   - `--strict` flag: exits with non-zero code if any checklist item fails.
   - `--level <1|2|3>` flag: filters checklist evaluation to target maturity tier (e.g. `--level 1` for MVP foundation).
-  - `--format <text|json|markdown>` (`--json`, `--markdown`): outputs structured JSON for custom dashboards or formatted Markdown for GitHub Actions PR comments and step summaries.
+  - `--markdown`: shortcut for `--format markdown`.
   - `--output <file>`: direct output export to specified file.
-  - Deep codebase scanning removing arbitrary 50-file limit.
+  - Deep codebase scanning removing arbitrary file limits.
 - **Production Boilerplate Templates**:
   - `health-check`: Node.js/Express liveness (`/healthz`) and deep readiness (`/readyz`) check router with DB/cache ping.
   - `fastapi-health-check`: FastAPI async health router with database ping and uptime tracking.
@@ -26,7 +31,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `github-ci`: Production GitHub Actions workflow running automated DevBible audit with automated PR comment reporting.
 - **Documentation & Agent Skills**:
   - Updated `skills/devbible-audit/SKILL.md` with new scaffolding commands.
-  - Complete English translation across all prompts and README sections.
+  - Complete English translation across all prompt resources and README sections.
+
+---
+
+## [1.1.1] - 2026-10-15
+
+### Fixed
+- **Action**: shortened the `description` in `action.yml` to under 125 characters, as the GitHub Marketplace requires.
+
+## [1.1.0] - 2026-10-15
+
+### Added
+- **GitHub Action** (`action.yml`): audits a repository on every pull request, posts and keeps updated a scorecard comment through the GitHub API, writes a job summary and can fail the build below a minimum score (`fail-under`). Outputs: `score`, `maturity`, `passed`, `warnings`, `failed`.
+- **CLI**: `devbible audit --json` prints the audit as machine-readable JSON (no banner, no colors).
+- `scripts/report-markdown.js` renders the JSON report as Markdown (used by the Action).
+- `.github/workflows/devbible-audit.yml`: the repository audits itself with its own Action.
+
+## [1.0.1] - 2026-10-15
+
+### Documentation
+- **README**: every `npx devbible …` command now reads `npx github:devcaiada/devbible …`. The package is not published on npm (`npx devbible` returned 404), while the GitHub form works out of the box.
+- **README**: added a Stars badge, a Discussions badge and a "Questions & Community" section. GitHub Discussions are now enabled, which also fixes the link in the issue-template chooser.
+
+### Fixed
+- **CLI audit**: checks `[12] Mobile Responsiveness` and `[19] Image Compression & Media CDN` returned `PASS` on both branches of the condition, so an empty project always passed them and the readiness score was inflated. They now return `WARN` when no evidence is found.
+- **CLI banner**: the version is read from `package.json` instead of being hardcoded as `v1.0.0`.
 
 ---
 

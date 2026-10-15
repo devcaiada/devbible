@@ -1,0 +1,118 @@
+name: 'DevBible Production-Readiness Audit'
+description: 'Audit a repo against the DevBible production-readiness checklist and comment the scorecard on pull requests.'
+author: 'devcaiada'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  path:
+    description: 'Directory to audit, relative to the workspace.'
+    required: false
+    default: '.'
+  fail-under:
+    description: 'Fail the job when the readiness score (0-100) is below this value. 0 disables the gate.'
+    required: false
+    default: '0'
+  comment:
+    description: 'Post (and keep updated) a scorecard comment on pull requests. Needs `pull-requests: write`.'
+    required: false
+    default: 'true'
+  github-token:
+    description: 'Token used to call the GitHub API to post the pull request comment.'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  score:
+    description: 'Production readiness score, 0-100.'
+    value: ${{ steps.audit.outputs.score }}
+  maturity:
+    description: 'Assigned maturity tier, e.g. "Level 2 (Scale Ready)".'
+    value: ${{ steps.audit.outputs.maturity }}
+  passed:
+    description: 'Number of checklist items that passed.'
+    value: ${{ steps.audit.outputs.passed }}
+  warnings:
+    description: 'Number of checklist items with a warning.'
+    value: ${{ steps.audit.outputs.warnings }}
+  failed:
+    description: 'Number of checklist items that failed.'
+    value: ${{ steps.audit.outputs.failed }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Run DevBible audit
+      id: audit
+      shell: bash
+      env:
+        TARGET: ${{ inputs.path }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        set -euo pipefail
+        report="$RUNNER_TEMP/devbible-report.json"
+        node "$ACTION_PATH/bin/devbible.js" audit "$TARGET" --json > "$report"
+        node -e '
+          const r = require(process.argv[1]);
+          const lines = ["score", "maturity", "passed", "warnings", "failed"].map((k) => `${k}=${r[k]}`);
+          require("fs").appendFileSync(process.env.GITHUB_OUTPUT, lines.join("\n") + "\n");
+        ' "$report"
+        echo "report=$report" >> "$GITHUB_OUTPUT"
+        node "$ACTION_PATH/scripts/report-markdown.js" "$report" >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Comment scorecard on the pull request
+      if: ${{ inputs.comment == 'true' && github.event_name == 'pull_request' }}
+      uses: actions/github-script@v7
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        REPORT: ${{ steps.audit.outputs.report }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const { execFileSync } = require('child_process');
+          const body = execFileSync(
+            'node',
+            [`${process.env.ACTION_PATH}/scripts/report-markdown.js`, process.env.REPORT],
+            { encoding: 'utf8' }
+          );
+          const marker = '<!-- devbible-audit -->';
+          const { owner, repo } = context.repo;
+          const issue_number = context.payload.pull_request.number;
+          try {
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number, per_page: 100,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+          } catch (error) {
+            // Pull requests from forks get a read-only token: do not fail the audit for that.
+            core.warning(`DevBible could not post the pull request comment: ${error.message}`);
+          }
+
+    - name: Enforce minimum score
+      shell: bash
+      env:
+        SCORE: ${{ steps.audit.outputs.score }}
+        MIN: ${{ inputs.fail-under }}
+      run: |
+        set -euo pipefail
+        if ! [[ "$MIN" =~ ^[0-9]+$ ]]; then
+          echo "::error::fail-under must be a whole number between 0 and 100 (got '$MIN')"
+          exit 1
+        fi
+        if [ "$MIN" -gt 0 ] && [ "$SCORE" -lt "$MIN" ]; then
+          echo "::error::DevBible readiness score $SCORE% is below the required minimum of $MIN%"
+          exit 1
+        fi
+        echo "DevBible readiness score: $SCORE% (minimum: $MIN%)"

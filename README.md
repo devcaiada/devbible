@@ -11,6 +11,8 @@
 [![Checklist Items](https://img.shields.io/badge/Checklist-20%20Items-blue.svg)](checklist/README.md)
 [![Maturity Levels](https://img.shields.io/badge/Maturity-3%20Tiers-purple.svg)](checklist/MATURITY-LEVELS.md)
 [![Version](https://img.shields.io/badge/Release-v1.0.0-orange.svg)](CHANGELOG.md)
+[![GitHub Stars](https://img.shields.io/github/stars/devcaiada/devbible?style=flat&logo=github)](https://github.com/devcaiada/devbible/stargazers)
+[![Discussions](https://img.shields.io/badge/Discussions-ask%20here-blue?logo=github)](https://github.com/devcaiada/devbible/discussions)
 
 ---
 
@@ -19,7 +21,7 @@
 **DevBible** is an opinionated, practical development reference created for modern full-stack developers, indie hackers, and vibecoders. In the era of rapid AI-assisted development, speed is easy — but shipping **reliable**, **secure**, and **scalable** software is where most builders struggle.
 
 DevBible bridges that gap by providing:
-1. **[DevBible CLI Auditor](bin/devbible.js)**: Run `npx devbible audit` to scan your repository in seconds and receive an instant production-readiness scorecard.
+1. **[DevBible CLI Auditor](bin/devbible.js)**: Run `npx github:devcaiada/devbible audit` to scan your repository in seconds and receive an instant production-readiness scorecard.
 2. **[DevBible Agent Skill](skills/devbible-audit/SKILL.md)**: Native skill for Claude Code, Codex, and Gemini to audit codebases and scaffold missing production boilerplate.
 3. **[SaaS Security Audit Prompt](resources/security-audit-prompt.md)**: A copy-paste agent prompt to audit 5 critical vulnerability vectors, generate an executive PDF report, and create GitHub Issues.
 4. **[Codebase Cleanup & Debt Eradication Prompt](resources/codebase-cleanup-prompt.md)**: A copy-paste prompt to aggressively eliminate dead code, duplicate logic, and tech debt.
@@ -40,31 +42,67 @@ Audit your codebase in seconds without manually checking 20 documents.
 ### 1. Run the DevBible CLI
 ```bash
 # Scan current repository and get an instant production readiness score
-npx devbible audit
+npx github:devcaiada/devbible audit
 
 # Run in CI/CD with strict mode to fail build if MVP Level 1 items are missing
-npx devbible audit --strict --level 1
+npx github:devcaiada/devbible audit --strict --level 1
 
 # Generate a GitHub-flavored Markdown scorecard for PR comments or CI summaries
-npx devbible audit --markdown --output devbible-report.md
+npx github:devcaiada/devbible audit --markdown --output devbible-report.md
 
 # Output raw JSON for custom dashboards and automation
-npx devbible audit --json
+npx github:devcaiada/devbible audit --json
 
 # List all 20 checklist items & maturity levels (or filter by tier)
-npx devbible list --level 1
+npx github:devcaiada/devbible list --level 1
 
 # Scaffold production-ready templates directly into your project
-npx devbible scaffold health-check          # /healthz and /readyz probes
-npx devbible scaffold security-headers      # Helmet CSP/HSTS & Next.js security headers
-npx devbible scaffold next-error-boundary   # Next.js App Router error.tsx boundary
-npx devbible scaffold github-ci             # Production GitHub Actions workflow
-npx devbible scaffold pino-logger           # Structured JSON logger with request IDs
-npx devbible scaffold express-error-handler # Centralized error middleware
-npx devbible scaffold docker-compose        # Production multi-service stack
+npx github:devcaiada/devbible scaffold 404-page          # Golden Shark 404 HTML error page
+npx github:devcaiada/devbible scaffold next-not-found    # Next.js App Router app/not-found.tsx
+npx github:devcaiada/devbible scaffold health-check      # /healthz and /readyz probes
+npx github:devcaiada/devbible scaffold security-headers  # Helmet CSP/HSTS & Next.js security headers
+npx github:devcaiada/devbible scaffold next-error-boundary # Next.js App Router error.tsx boundary
+npx github:devcaiada/devbible scaffold github-ci         # Production GitHub Actions workflow
+npx github:devcaiada/devbible scaffold pino-logger       # Structured JSON logger with request IDs
+npx github:devcaiada/devbible scaffold express-error-handler # Centralized error middleware
+npx github:devcaiada/devbible scaffold docker-compose    # Production multi-service stack
 ```
 
-### 2. Install the DevBible Agent Skill
+> The CLI runs straight from GitHub, no install needed (requires Node.js 18+). `npx` downloads it on the fly and it never touches your project's dependencies.
+
+### 2. Add the DevBible GitHub Action
+
+Audit every pull request automatically. The Action runs the audit, posts (and keeps updated) a scorecard comment on the PR through the GitHub API, writes a job summary and can fail the build below a minimum score.
+
+```yaml
+# .github/workflows/devbible.yml
+name: DevBible Audit
+on: pull_request
+
+permissions:
+  contents: read
+  pull-requests: write   # needed to post the scorecard comment
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: devcaiada/devbible@v1
+        with:
+          fail-under: 60   # optional: fail the job below this score (default 0 = never fail)
+```
+
+| Input | Default | Description |
+|-------|---------|-------------|
+| `path` | `.` | Directory to audit |
+| `fail-under` | `0` | Fail when the score (0-100) is below this value |
+| `comment` | `true` | Post the scorecard as a PR comment |
+| `github-token` | `${{ github.token }}` | Token used to call the GitHub API |
+
+Outputs: `score`, `maturity`, `passed`, `warnings`, `failed`. Pull requests from forks get a read-only token, so the comment is skipped with a warning (the job summary and the score gate still work). Need the raw data? `npx github:devcaiada/devbible audit --json`.
+
+### 3. Install the DevBible Agent Skill
 Equip your AI coding agent with the `/devbible:audit` and `/devbible:scaffold` commands:
 
 - **Claude Code**:
@@ -491,6 +529,13 @@ Showcase your project's production readiness in your repository's README:
 <!-- Level 3: Enterprise Ready -->
 [![DevBible Verified: Level 3 Enterprise](https://img.shields.io/badge/DevBible-Level%203%20Enterprise-purple?style=for-the-badge&logo=shield)](https://github.com/devcaiada/devbible/blob/main/checklist/MATURITY-LEVELS.md)
 ```
+
+---
+
+## 💬 Questions & Community
+
+- **Got a question or want to share your setup?** Open a thread in [GitHub Discussions](https://github.com/devcaiada/devbible/discussions) (the **Q&A** category is for questions, **Show and tell** for your own audits and results).
+- **Found DevBible useful?** A ⭐ on the repository helps other builders find it.
 
 ---
 
