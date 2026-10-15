@@ -8,6 +8,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const VERSION = require('../package.json').version;
+
 // ANSI Color codes
 const colors = {
   reset: '\x1b[0m',
@@ -46,7 +48,7 @@ const CHECKLIST_ITEMS = [
 
 function printBanner() {
   console.log(`\n${colors.cyan}${colors.bold}┌────────────────────────────────────────────────────────┐${colors.reset}`);
-  console.log(`${colors.cyan}${colors.bold}│                🛡️  DevBible CLI v1.0.0                  │${colors.reset}`);
+  console.log(`${colors.cyan}${colors.bold}│                🛡️  DevBible CLI v${VERSION}${' '.repeat(Math.max(1, 23 - VERSION.length))}│${colors.reset}`);
   console.log(`${colors.cyan}${colors.bold}│    Production Readiness Auditor for Vibecoders & Devs   │${colors.reset}`);
   console.log(`${colors.cyan}${colors.bold}└────────────────────────────────────────────────────────┘${colors.reset}\n`);
 }
@@ -194,7 +196,7 @@ function auditCodebase(targetDir = '.') {
       /viewport|sm:|md:|lg:|@media|mobile/i.test(allContents) ||
       fileNames.includes('tailwind.config.js') ||
       fileNames.includes('tailwind.config.ts');
-    return hasResponsive ? 'PASS' : 'PASS';
+    return hasResponsive ? 'PASS' : 'WARN';
   }
 
   function check13() {
@@ -252,7 +254,7 @@ function auditCodebase(targetDir = '.') {
     const hasImageOpt =
       /next\/image|nuxt-img|sharp|webp|avif|cloudinary|cloudflare-images/i.test(allContents) ||
       /"sharp"/i.test(pkgContent);
-    return hasImageOpt ? 'PASS' : 'PASS';
+    return hasImageOpt ? 'PASS' : 'WARN';
   }
 
   function check20() {

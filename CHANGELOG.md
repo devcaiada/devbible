@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- **CLI audit**: checks `[12] Mobile Responsiveness` and `[19] Image Compression & Media CDN` returned `PASS` on both branches of the condition, so an empty project always passed them and the readiness score was inflated. They now return `WARN` when no evidence is found.
+- **CLI banner**: the version is read from `package.json` instead of being hardcoded as `v1.0.0`.
+
+---
+
 ## [1.0.0] - 2026-08-27
 
 ### 🚀 Initial Public Release
