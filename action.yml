@@ -1,5 +1,5 @@
 name: 'DevBible Production-Readiness Audit'
-description: 'Audit a repository against the DevBible 20-item production-readiness checklist, comment the scorecard on pull requests and optionally fail the build below a minimum score.'
+description: 'Audit a repo against the DevBible production-readiness checklist and comment the scorecard on pull requests.'
 author: 'devcaiada'
 
 branding:
