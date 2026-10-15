@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+- **README**: every `npx devbible …` command now reads `npx github:devcaiada/devbible …`. The package is not published on npm (`npx devbible` returned 404), while the GitHub form works out of the box.
+- **README**: added a Stars badge, a Discussions badge and a "Questions & Community" section. GitHub Discussions are now enabled, which also fixes the link in the issue-template chooser.
+
 ### Fixed
 - **CLI audit**: checks `[12] Mobile Responsiveness` and `[19] Image Compression & Media CDN` returned `PASS` on both branches of the condition, so an empty project always passed them and the readiness score was inflated. They now return `WARN` when no evidence is found.
 - **CLI banner**: the version is read from `package.json` instead of being hardcoded as `v1.0.0`.
