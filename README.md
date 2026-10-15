@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: devcaiada/devbible@main
+      - uses: devcaiada/devbible@v1
         with:
           fail-under: 60   # optional: fail the job below this score (default 0 = never fail)
 ```
