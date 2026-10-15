@@ -42,13 +42,26 @@ Audit your codebase in seconds without manually checking 20 documents.
 # Scan current repository and get an instant production readiness score
 npx devbible audit
 
-# List all 20 checklist items & maturity levels
-npx devbible list
+# Run in CI/CD with strict mode to fail build if MVP Level 1 items are missing
+npx devbible audit --strict --level 1
 
-# Scaffold a production template directly into your project
-npx devbible scaffold pino-logger
-npx devbible scaffold express-error-handler
-npx devbible scaffold docker-compose
+# Generate a GitHub-flavored Markdown scorecard for PR comments or CI summaries
+npx devbible audit --markdown --output devbible-report.md
+
+# Output raw JSON for custom dashboards and automation
+npx devbible audit --json
+
+# List all 20 checklist items & maturity levels (or filter by tier)
+npx devbible list --level 1
+
+# Scaffold production-ready templates directly into your project
+npx devbible scaffold health-check          # /healthz and /readyz probes
+npx devbible scaffold security-headers      # Helmet CSP/HSTS & Next.js security headers
+npx devbible scaffold next-error-boundary   # Next.js App Router error.tsx boundary
+npx devbible scaffold github-ci             # Production GitHub Actions workflow
+npx devbible scaffold pino-logger           # Structured JSON logger with request IDs
+npx devbible scaffold express-error-handler # Centralized error middleware
+npx devbible scaffold docker-compose        # Production multi-service stack
 ```
 
 ### 2. Install the DevBible Agent Skill
@@ -72,7 +85,7 @@ Equip your AI coding agent with the `/devbible:audit` and `/devbible:scaffold` c
 
 ## 🚨 Ultimate SaaS Security Audit Prompt (Copy & Paste)
 
-> 🛡️ **Scan your SaaS for critical vulnerabilities in minutes.** Copy and paste this master prompt into **Claude Code**, **Cursor**, **Antigravity / Gemini**, **VS Code**, or **Codex**. The AI agent will detect your stack, systematically audit 5 critical vulnerability vectors, generate a comprehensive executive PDF report (`docs/security-audit/relatorio-auditoria-seguranca.pdf`), and output complete, ready-to-paste **GitHub Issues** for every finding.
+> 🛡️ **Scan your SaaS for critical vulnerabilities in minutes.** Copy and paste this master prompt into **Claude Code**, **Cursor**, **Antigravity / Gemini**, **VS Code**, or **Codex**. The AI agent will detect your stack, systematically audit 5 critical vulnerability vectors, generate a comprehensive executive PDF report (`docs/security-audit/security-audit-report.pdf`), and output complete, ready-to-paste **GitHub Issues** for every finding.
 
 📖 Read the full guide & documentation in **[resources/security-audit-prompt.md](resources/security-audit-prompt.md)**.
 
@@ -92,49 +105,49 @@ Equip your AI coding agent with the `/devbible:audit` and `/devbible:scaffold` c
 <summary><b>📋 Click to View / Copy the Complete Security Audit Prompt</b></summary>
 
 ```markdown
-Revisa este código atrás de cinco falhas de segurança. Antes de começar, detecte a stack do projeto (linguagem, framework, ORM/query builder, mecanismo de auth, frontend, arquivos de deploy como Docker/CI/Helm/Terraform) e adapte cada categoria ao equivalente dessa stack:
+Review this codebase for five critical security vulnerabilities. Before beginning, detect the project's stack (programming language, framework, ORM/query builder, auth mechanism, frontend, and deployment configurations such as Docker/CI/Helm/Terraform) and adapt each category to its stack-specific equivalent:
 
-1. BANCO SEM TRANCA (isolamento de inquilino/dono) — em Supabase é RLS ausente; em APIs próprias são queries de listagem/busca/agregação/relatório/exportação que não filtram pelo usuário autenticado ou pela organização/workspace/tenant ao qual ele pertence. Identifique primeiro QUAL é o mecanismo de isolamento do projeto (RLS, middleware de tenant, filtro manual por user_id, etc.) e aponte onde ele está ausente ou furado.
+1. BROKEN TENANT LOCK (Tenant / Owner Isolation) — In Supabase, this means missing RLS; in custom APIs, it refers to list, search, aggregation, reporting, or export queries that do not filter by the authenticated user or the organization/workspace/tenant to which they belong. First identify the project's isolation mechanism (RLS, tenant middleware, manual user_id filters, etc.) and point out everywhere it is missing, bypassed, or leaky.
 
-2. PERMISSÃO DEFINIDA NO NAVEGADOR — operações privilegiadas (admin, configurações, gestão de usuários, ações de escrita) em que o frontend esconde a UI por papel (isAdmin, canEdit, role...) mas o servidor NÃO faz a verificação equivalente. Cruze cada gate de papel do frontend com o endpoint correspondente e confirme se o backend valida o privilégio em toda rota sensível.
+2. CLIENT-SIDE ONLY AUTHORIZATION — Privileged operations (admin actions, system settings, user management, mutation endpoints) where the frontend hides UI elements based on roles (isAdmin, canEdit, role...), but the backend server does NOT perform an equivalent check. Cross-reference every frontend role gate with its corresponding API endpoint and confirm that the backend enforces authorization on all sensitive routes.
 
-3. IDOR — rotas que buscam, alteram ou deletam um objeto por ID (path, query ou body) sem verificar se o objeto pertence ao usuário/tenant do chamador. Percorra sistematicamente TODOS os handlers de rota do backend, não amostras.
+3. IDOR (Insecure Direct Object Reference) — Routes that retrieve, modify, or delete an object by ID (via path, query param, or request body) without verifying that the object belongs to the requesting user/tenant. Systematically inspect ALL backend route handlers, not just a random sample.
 
-4. CHAVES EXPOSTAS (hardcode) — API keys, tokens, senhas, segredos de assinatura (JWT, webhooks), chaves privadas e credenciais padrão embutidos no código-fonte, configs, docker-compose, charts, CI, scripts e documentação. Atenção especial a defaults públicos que viram segredo real se não forem sobrescritos (ex: ${VAR:-valor-default}) e à ausência de validação de startup que rejeite esses defaults. Verifique também o histórico git por segredos commitados e o bundle do frontend por chaves embutidas.
+4. EXPOSED KEYS & SECRETS (Hardcoding) — API keys, tokens, passwords, signature secrets (JWT, webhooks), private keys, and default credentials embedded in source code, configuration files, docker-compose, Helm charts, CI pipelines, scripts, or documentation. Pay special attention to public fallback defaults that become real secrets if omitted (e.g. ${VAR:-default-value}) and the absence of startup validations that fail fast when these defaults are detected. Also inspect git history for committed secrets and frontend bundles for leaked keys.
 
-5. INPUTS SEM TRATAMENTO (XSS) — no frontend: innerHTML/dangerouslySetInnerHTML/equivalentes do framework (v-html, [innerHTML], dangerouslySet...), renderização de markdown/HTML sem sanitização, URLs controladas por usuário em href/src (javascript:), eval/new Function. No backend: input do usuário entrando em HTML de e-mails, templates ou respostas sem escape. Verifique se existe lib de sanitização no projeto e se ela é aplicada nos pontos encontrados.
+5. UNSANITIZED INPUTS (XSS & Injection) — On the frontend: innerHTML, dangerouslySetInnerHTML, framework equivalents (v-html, [innerHTML], etc.), markdown/HTML rendering without sanitization, user-controlled URLs in href/src (javascript:), eval(), and new Function(). On the backend: unescaped user inputs injected into HTML emails, templates, or raw responses. Verify whether a sanitization library exists in the project and whether it is applied at all vulnerable points.
 
-REGRAS DA AUDITORIA:
-- Reporte apenas achados verificados no código real. Nada de especulação. Para cada achado: caminho do arquivo, número(s) exato(s) da linha, trecho do código, por que é explorável e severidade (crítica/alta/média/baixa/informativa).
-- Liste arquivo por arquivo, linha por linha.
-- Registre também o que foi verificado e está CORRETO (ex: "router X valida posse em todos os handlers") — isso vira a seção de pontos fortes e prova a cobertura da auditoria.
-- Quando a categoria não se aplicar à stack (ex: projeto sem frontend), diga isso explicitamente em vez de forçar achados.
-- Note condições de explorabilidade (feature flags, config insegura necessária, etc.).
+AUDIT RULES:
+- Report only verified findings grounded in the actual codebase. No speculation or hallucinations. For each finding, include: file path, exact line number(s), code snippet, explanation of why it is exploitable, and severity (critical / high / medium / low / informational).
+- List findings file-by-file, line-by-line.
+- Also record what was inspected and confirmed SECURE (e.g., "Router X properly verifies ownership across all handlers") — this forms the Strengths section and proves comprehensive audit coverage.
+- When a category does not apply to the stack (e.g., headless/backend-only project without a frontend), explicitly state this rather than inventing findings.
+- Note any specific conditions required for exploitability (e.g., feature flags enabled, insecure configuration required).
 
-DEPOIS DA AUDITORIA, gere um RELATÓRIO EM PDF, visualmente amigável, em pt-BR, salvo em docs/security-audit/relatorio-auditoria-seguranca.pdf, contendo:
+AFTER THE AUDIT, generate a visually polished, executive PDF REPORT saved to docs/security-audit/security-audit-report.pdf containing:
 
-a) Capa: título "Relatório de Auditoria de Segurança — <nome do projeto>", data, escopo auditado e nota metodológica (como cada categoria foi mapeada para a stack detectada).
-b) Resumo executivo: total de achados por severidade, gráfico de rosca por severidade e gráfico de barras por categoria. Paleta: crítica #B91C1C, alta #EA580C, média #D97706, baixa #2563EB, ponto forte #059669.
-c) Pontos fortes (o que está protegido, com evidência) e pontos fracos (os riscos centrais).
-d) Tabela de achados detalhados por categoria: Severidade | Arquivo:linha | Descrição, com chip de severidade colorido.
-e) Recomendações priorizadas (P1, P2, P3...).
-f) AO FINAL DO PDF, uma seção "ISSUES PARA O GITHUB": para cada achado acionável, o texto COMPLETO de uma issue em Markdown, pronto para copiar e colar, dentro de um bloco delimitado (ex: entre --- ISSUE n --- e --- FIM ISSUE n ---). Cada issue deve conter:
-- Título no formato "[Segurança] <descrição curta da falha>"
-- Labels sugeridas: security + severidade
-- Descrição do problema e por que é explorável
-- Evidência: arquivo:linha com trecho de código
-- Impacto
-- Sugestão de correção
-- Critérios de aceite (checklist verificável)
-Agrupe achados triviais relacionados numa issue única quando fizer sentido (ex: vários defaults de segredo no mesmo tema), para não gerar spam de issues.
+a) Cover Page: Title "Security Audit Report — <Project Name>", date, audited scope, and methodology notes (how each category was mapped to the detected stack).
+b) Executive Summary: Total findings by severity, a donut chart showing severity breakdown, and a bar chart showing findings by category. Palette: critical #B91C1C, high #EA580C, medium #D97706, low #2563EB, strengths/passing #059669.
+c) Strengths (what is verified secure with evidence) and Weaknesses (core architectural risks).
+d) Detailed Findings Table by category: Severity | File:Line | Description, with color-coded severity badges.
+e) Prioritized Recommendations (P1, P2, P3...).
+f) AT THE END OF THE PDF, a "GITHUB ISSUES" section: for every actionable finding, provide the COMPLETE Markdown text of a GitHub Issue, ready to copy and paste, inside a delimited block (e.g. between --- ISSUE n --- and --- END ISSUE n ---). Each issue must contain:
+- Title formatted as "[Security] <Short vulnerability summary>"
+- Suggested labels: security + severity
+- Problem description and why it is exploitable
+- Evidence: file:line with code snippet
+- Impact
+- Remediation guidance
+- Acceptance criteria (verifiable checklist)
+Group closely related trivial findings into a single issue where appropriate (e.g., multiple default secrets of the same category) to avoid issue tracker spam.
 
-GERAÇÃO DO PDF — REGRAS TÉCNICAS:
-- Não instale nada globalmente. Use ambiente isolado (venv Python com reportlab+matplotlib, ou ferramenta equivalente da stack local; se houver navegador headless/wkhtmltopdf/pandoc disponível, HTML→PDF também vale).
-- Deixe o script gerador em docs/security-audit/ para regerar o relatório depois.
-- Verifique o PDF gerado: número de páginas, renderização dos gráficos e legibilidade das tabelas (rasterize as páginas se possível). Corrija defeitos visuais antes de entregar.
-- Páginas A4, margens ~2cm, cabeçalho/rodapé com nome do relatório e número de página.
+PDF GENERATION — TECHNICAL GUIDELINES:
+- Do not install dependencies globally. Use an isolated environment (e.g. Python venv with reportlab + matplotlib, or equivalent local tooling; headless browser / wkhtmltopdf / pandoc converting HTML to PDF is also acceptable).
+- Keep the generator script in docs/security-audit/ so the report can be regenerated in future CI/CD pipelines.
+- Verify the generated PDF: page count, chart rendering quality, and table readability (rasterize pages if necessary). Fix visual defects before finishing.
+- Format for standard A4 pages with ~2cm margins, header/footer with report title and page numbers.
 
-Me entregue ao final: o relatório em PDF, a lista de achados no chat (arquivo por arquivo, linha por linha) e o caminho de todos os arquivos gerados.
+Deliver to me at the end: the generated PDF report, the full findings list in chat (file-by-file, line-by-line), and the paths to all created files.
 ```
 </details>
 
@@ -432,7 +445,11 @@ devbible/
 ├── templates/                   # Drop-in Production Templates
 │   ├── error-handler/           # Express & FastAPI error handlers
 │   ├── logging-config/          # Pino & Structlog JSON loggers
-│   └── docker-compose/          # Multi-service production compose stack
+│   ├── docker-compose/          # Multi-service production compose stack
+│   ├── health-check/            # Express & FastAPI /healthz and /readyz probes
+│   ├── security-headers/        # Helmet CSP/HSTS & Next.js security headers
+│   ├── next-error-boundary/     # Next.js App Router app/error.tsx boundary
+│   └── github-ci/               # Automated DevBible audit GitHub Actions workflow
 │
 ├── resources/                   # Curated Developer Resources
 │   ├── recommended-tools.md     # Vetted developer tools & services

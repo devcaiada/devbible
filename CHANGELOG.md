@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-10-15
+
+### 🚀 CI/CD Automation & Expanded Boilerplates
+
+#### Added
+- **CLI CI/CD Capabilities**:
+  - `--strict` flag: exits with non-zero code if any checklist item fails.
+  - `--level <1|2|3>` flag: filters checklist evaluation to target maturity tier (e.g. `--level 1` for MVP foundation).
+  - `--format <text|json|markdown>` (`--json`, `--markdown`): outputs structured JSON for custom dashboards or formatted Markdown for GitHub Actions PR comments and step summaries.
+  - `--output <file>`: direct output export to specified file.
+  - Deep codebase scanning removing arbitrary 50-file limit.
+- **Production Boilerplate Templates**:
+  - `health-check`: Node.js/Express liveness (`/healthz`) and deep readiness (`/readyz`) check router with DB/cache ping.
+  - `fastapi-health-check`: FastAPI async health router with database ping and uptime tracking.
+  - `security-headers`: Production Helmet configuration with strict CSP/HSTS and Next.js `headers()` config.
+  - `next-error-boundary`: Next.js App Router `app/error.tsx` boundary with Sentry reporting and user recovery actions.
+  - `github-ci`: Production GitHub Actions workflow running automated DevBible audit with automated PR comment reporting.
+- **Documentation & Agent Skills**:
+  - Updated `skills/devbible-audit/SKILL.md` with new scaffolding commands.
+  - Complete English translation across all prompts and README sections.
+
+---
+
 ## [1.0.0] - 2026-08-27
 
 ### 🚀 Initial Public Release

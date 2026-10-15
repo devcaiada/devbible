@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - Lost in the Digital Ocean | DevBible</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦈</text></svg>">
+  <style>
+    :root {
+      --bg: #090a10;
+      --card-bg: rgba(18, 20, 32, 0.75);
+      --card-border: rgba(245, 158, 11, 0.25);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --gold-primary: #f59e0b;
+      --gold-glow: rgba(245, 158, 11, 0.4);
+      --gold-gradient: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      --accent-cyan: #38bdf8;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient cyber glow background */
+    .ambient-glow {
+      position: absolute;
+      width: 550px;
+      height: 550px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, rgba(56, 189, 248, 0.05) 50%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 0;
+      animation: pulse 8s ease-in-out infinite alternate;
+    }
+
+    .grid-lines {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 620px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 3rem 2.5rem;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 40px rgba(245, 158, 11, 0.1);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #fbbf24;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      margin-bottom: 1.5rem;
+    }
+
+    .badge-icon {
+      font-size: 1rem;
+    }
+
+    .mascot-container {
+      width: 180px;
+      height: 180px;
+      margin: 0 auto 1.5rem;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .mascot-image {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 10px 20px var(--gold-glow));
+    }
+
+    .error-code {
+      font-size: clamp(3.5rem, 8vw, 5.5rem);
+      font-weight: 900;
+      line-height: 1;
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.04em;
+      margin-bottom: 0.75rem;
+    }
+
+    .title {
+      font-size: clamp(1.25rem, 4vw, 1.75rem);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+    }
+
+    .description {
+      color: var(--text-secondary);
+      font-size: 0.975rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .action-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.875rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      padding: 0.8rem 1.6rem;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--gold-gradient);
+      color: #000;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35);
+      border: none;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .quick-links {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 1.5rem;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      font-size: 0.85rem;
+    }
+
+    .quick-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .quick-links a:hover {
+      color: #fbbf24;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-12px) rotate(2deg);
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: 0.7;
+        transform: translate(-50%, -50%) scale(0.95);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.08);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-glow"></div>
+  <div class="grid-lines"></div>
+
+  <main class="card">
+    <div class="badge">
+      <span class="badge-icon">🦈</span> Golden Shark Level 3 Verified
+    </div>
+
+    <div class="mascot-container">
+      <img 
+        src="assets/images/404_golden_shark.png" 
+        alt="Golden Cyber Shark Navigation Mascot"
+        class="mascot-image"
+        onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 120 120\'><defs><linearGradient id=\'g\' x1=\'0\' y1=\'0\' x2=\'1\' y2=\'1\'><stop offset=\'0%25\' stop-color=\'%23fbbf24\'/><stop offset=\'100%25\' stop-color=\'%23d97706\'/></linearGradient></defs><circle cx=\'60\' cy=\'60\' r=\'50\' fill=\'rgba(245,158,11,0.15)\' stroke=\'url(%23g)\' stroke-width=\'3\'/><text x=\'60\' y=\'75\' font-size=\'48\' text-anchor=\'middle\'>🦈</text></svg>';"
+      />
+    </div>
+
+    <div class="error-code">404</div>
+    <h1 class="title">Lost in the Digital Ocean</h1>
+    <p class="description">
+      The coordinates you navigated to do not exist or have drifted away. 
+      Let our Golden Shark guide you safely back into production waters.
+    </p>
+
+    <div class="action-group">
+      <a href="/" class="btn btn-primary">
+        <span>🧭</span> Return to Home
+      </a>
+      <a href="https://github.com/devcaiada/devbible" class="btn btn-secondary">
+        <span>📖</span> Documentation
+      </a>
+      <a href="https://github.com/devcaiada/devbible/issues" class="btn btn-secondary">
+        <span>🐛</span> Report Broken Link
+      </a>
+    </div>
+
+    <div class="quick-links">
+      <a href="/">Dashboard</a>
+      <span>·</span>
+      <a href="checklist/">Checklist</a>
+      <span>·</span>
+      <a href="skills/">Skills</a>
+      <span>·</span>
+      <a href="templates/">Templates</a>
+    </div>
+  </main>
+</body>
+</html>

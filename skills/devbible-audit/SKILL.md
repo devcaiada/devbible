@@ -56,7 +56,16 @@ Present a concise scorecard to the user with the top 3 highest-priority missing 
 
 ### 2. `/devbible:scaffold <item>`
 When the user asks to scaffold or fix an item:
-- **`error-handler`**: Scaffolds Express or FastAPI standardized error handlers and status codes.
-- **`logger`**: Scaffolds Pino (Node.js) or structlog (Python) structured JSON logging with correlation IDs.
+- **`health-check`**: Scaffolds Node.js / Express `/healthz` and `/readyz` dependency checks.
+- **`fastapi-health-check`**: Scaffolds FastAPI `/healthz` and `/readyz` probes with async DB ping.
+- **`security-headers`**: Scaffolds production Helmet CSP/HSTS middleware and Next.js security headers.
+- **`next-error-boundary`**: Scaffolds Next.js App Router `app/error.tsx` boundary with Sentry reporting.
+- **`github-ci`**: Scaffolds `.github/workflows/devbible-ci.yml` running lint, tests, and automated audit scorecard.
+- **`express-error-handler`**: Scaffolds Express standardized error handlers and status codes.
+- **`fastapi-error-handler`**: Scaffolds FastAPI standardized exception handlers and error envelopes.
+- **`pino-logger`**: Scaffolds Pino (Node.js) structured JSON logging with correlation IDs.
+- **`python-structlog`**: Scaffolds structlog (Python) structured JSON logging with correlation IDs.
+- **`404-page`**: Scaffolds production Golden Shark `404.html` error page.
+- **`next-not-found`**: Scaffolds Next.js App Router `app/not-found.tsx` with Golden Shark theme.
 - **`docker-compose`**: Scaffolds a multi-service production stack (App + PostgreSQL + Redis + Caddy SSL).
-- **`review-checklist`**: Copies `PROJECT-REVIEW-CHECKLIST.md` into the user's root directory.
+- **`checklist`**: Copies `PROJECT-REVIEW-CHECKLIST.md` into the user's root directory.
