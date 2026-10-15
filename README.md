@@ -55,7 +55,39 @@ npx github:devcaiada/devbible scaffold docker-compose
 
 > The CLI runs straight from GitHub, no install needed (requires Node.js 18+). `npx` downloads it on the fly and it never touches your project's dependencies.
 
-### 2. Install the DevBible Agent Skill
+### 2. Add the DevBible GitHub Action
+
+Audit every pull request automatically. The Action runs the audit, posts (and keeps updated) a scorecard comment on the PR through the GitHub API, writes a job summary and can fail the build below a minimum score.
+
+```yaml
+# .github/workflows/devbible.yml
+name: DevBible Audit
+on: pull_request
+
+permissions:
+  contents: read
+  pull-requests: write   # needed to post the scorecard comment
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: devcaiada/devbible@main
+        with:
+          fail-under: 60   # optional: fail the job below this score (default 0 = never fail)
+```
+
+| Input | Default | Description |
+|-------|---------|-------------|
+| `path` | `.` | Directory to audit |
+| `fail-under` | `0` | Fail when the score (0-100) is below this value |
+| `comment` | `true` | Post the scorecard as a PR comment |
+| `github-token` | `${{ github.token }}` | Token used to call the GitHub API |
+
+Outputs: `score`, `maturity`, `passed`, `warnings`, `failed`. Pull requests from forks get a read-only token, so the comment is skipped with a warning (the job summary and the score gate still work). Need the raw data? `npx github:devcaiada/devbible audit --json`.
+
+### 3. Install the DevBible Agent Skill
 Equip your AI coding agent with the `/devbible:audit` and `/devbible:scaffold` commands:
 
 - **Claude Code**:

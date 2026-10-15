@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [1.1.0] - 2026-10-15
+
+### Added
+- **GitHub Action** (`action.yml`): audits a repository on every pull request, posts and keeps updated a scorecard comment through the GitHub API, writes a job summary and can fail the build below a minimum score (`fail-under`). Outputs: `score`, `maturity`, `passed`, `warnings`, `failed`.
+- **CLI**: `devbible audit --json` prints the audit as machine-readable JSON (no banner, no colors).
+- `scripts/report-markdown.js` renders the JSON report as Markdown (used by the Action).
+- `.github/workflows/devbible-audit.yml`: the repository audits itself with its own Action.
+
+## [1.0.1] - 2026-10-15
 
 ### Documentation
 - **README**: every `npx devbible …` command now reads `npx github:devcaiada/devbible …`. The package is not published on npm (`npx devbible` returned 404), while the GitHub form works out of the box.

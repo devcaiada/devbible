@@ -85,10 +85,12 @@ function readFileSafe(filePath) {
   }
 }
 
-function auditCodebase(targetDir = '.') {
+function auditCodebase(targetDir = '.', options = {}) {
   const root = path.resolve(targetDir);
-  printBanner();
-  console.log(`${colors.bold}🔍 Auditing codebase at:${colors.reset} ${colors.dim}${root}${colors.reset}\n`);
+  if (!options.json) {
+    printBanner();
+    console.log(`${colors.bold}🔍 Auditing codebase at:${colors.reset} ${colors.dim}${root}${colors.reset}\n`);
+  }
 
   const files = findFilesRecursive(root);
   const fileNames = files.map((f) => path.basename(f).toLowerCase());
@@ -274,6 +276,24 @@ function auditCodebase(targetDir = '.') {
     check11, check12, check13, check14, check15, check16, check17, check18, check19, check20,
   ];
 
+  if (options.json) {
+    const items = CHECKLIST_ITEMS.map((item, index) => ({
+      id: item.id,
+      name: item.name,
+      level: item.level,
+      file: item.file,
+      status: evaluators[index](),
+    }));
+    const passed = items.filter((i) => i.status === 'PASS').length;
+    const warnings = items.filter((i) => i.status === 'WARN').length;
+    const failed = items.filter((i) => i.status === 'FAIL').length;
+    const score = Math.round(((passed + warnings * 0.5) / items.length) * 100);
+    const maturity =
+      score >= 85 ? 'Level 3 (Enterprise Ready)' : score >= 60 ? 'Level 2 (Scale Ready)' : score >= 40 ? 'Level 1 (MVP Ready)' : 'Incomplete';
+    console.log(JSON.stringify({ version: VERSION, score, maturity, passed, warnings, failed, items }, null, 2));
+    return;
+  }
+
   let passedCount = 0;
   let warnCount = 0;
   let failCount = 0;
@@ -426,7 +446,7 @@ function scaffoldTemplate(templateName, dest = '.') {
 function showHelp() {
   printBanner();
   console.log(`${colors.bold}Commands:${colors.reset}`);
-  console.log(`  ${colors.cyan}devbible audit [path]${colors.reset}          Scan codebase and calculate readiness score`);
+  console.log(`  ${colors.cyan}devbible audit [path] [--json]${colors.reset} Scan codebase and calculate readiness score (--json: machine-readable)`);
   console.log(`  ${colors.cyan}devbible list${colors.reset}                  List all 20 checklist items & maturity levels`);
   console.log(`  ${colors.cyan}devbible info <01-20>${colors.reset}          Show guide and best practices for an item`);
   console.log(`  ${colors.cyan}devbible scaffold <template>${colors.reset}   Copy production template into your project`);
@@ -436,12 +456,13 @@ function showHelp() {
 }
 
 // CLI Argument Router
-const args = process.argv.slice(2);
+const jsonMode = process.argv.includes('--json');
+const args = process.argv.slice(2).filter((a) => a !== '--json');
 const command = args[0] ? args[0].toLowerCase() : 'audit';
 
 switch (command) {
   case 'audit':
-    auditCodebase(args[1] || '.');
+    auditCodebase(args[1] || '.', { json: jsonMode });
     break;
   case 'list':
   case 'ls':
