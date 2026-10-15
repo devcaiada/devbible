@@ -11,6 +11,8 @@
 [![Checklist Items](https://img.shields.io/badge/Checklist-20%20Items-blue.svg)](checklist/README.md)
 [![Maturity Levels](https://img.shields.io/badge/Maturity-3%20Tiers-purple.svg)](checklist/MATURITY-LEVELS.md)
 [![Version](https://img.shields.io/badge/Release-v1.0.0-orange.svg)](CHANGELOG.md)
+[![GitHub Stars](https://img.shields.io/github/stars/devcaiada/devbible?style=flat&logo=github)](https://github.com/devcaiada/devbible/stargazers)
+[![Discussions](https://img.shields.io/badge/Discussions-ask%20here-blue?logo=github)](https://github.com/devcaiada/devbible/discussions)
 
 ---
 
@@ -19,7 +21,7 @@
 **DevBible** is an opinionated, practical development reference created for modern full-stack developers, indie hackers, and vibecoders. In the era of rapid AI-assisted development, speed is easy — but shipping **reliable**, **secure**, and **scalable** software is where most builders struggle.
 
 DevBible bridges that gap by providing:
-1. **[DevBible CLI Auditor](bin/devbible.js)**: Run `npx devbible audit` to scan your repository in seconds and receive an instant production-readiness scorecard.
+1. **[DevBible CLI Auditor](bin/devbible.js)**: Run `npx github:devcaiada/devbible audit` to scan your repository in seconds and receive an instant production-readiness scorecard.
 2. **[DevBible Agent Skill](skills/devbible-audit/SKILL.md)**: Native skill for Claude Code, Codex, and Gemini to audit codebases and scaffold missing production boilerplate.
 3. **[SaaS Security Audit Prompt](resources/security-audit-prompt.md)**: A copy-paste agent prompt to audit 5 critical vulnerability vectors, generate an executive PDF report, and create GitHub Issues.
 4. **[Codebase Cleanup & Debt Eradication Prompt](resources/codebase-cleanup-prompt.md)**: A copy-paste prompt to aggressively eliminate dead code, duplicate logic, and tech debt.
@@ -40,16 +42,18 @@ Audit your codebase in seconds without manually checking 20 documents.
 ### 1. Run the DevBible CLI
 ```bash
 # Scan current repository and get an instant production readiness score
-npx devbible audit
+npx github:devcaiada/devbible audit
 
 # List all 20 checklist items & maturity levels
-npx devbible list
+npx github:devcaiada/devbible list
 
 # Scaffold a production template directly into your project
-npx devbible scaffold pino-logger
-npx devbible scaffold express-error-handler
-npx devbible scaffold docker-compose
+npx github:devcaiada/devbible scaffold pino-logger
+npx github:devcaiada/devbible scaffold express-error-handler
+npx github:devcaiada/devbible scaffold docker-compose
 ```
+
+> The CLI runs straight from GitHub, no install needed (requires Node.js 18+). `npx` downloads it on the fly and it never touches your project's dependencies.
 
 ### 2. Install the DevBible Agent Skill
 Equip your AI coding agent with the `/devbible:audit` and `/devbible:scaffold` commands:
@@ -474,6 +478,13 @@ Showcase your project's production readiness in your repository's README:
 <!-- Level 3: Enterprise Ready -->
 [![DevBible Verified: Level 3 Enterprise](https://img.shields.io/badge/DevBible-Level%203%20Enterprise-purple?style=for-the-badge&logo=shield)](https://github.com/devcaiada/devbible/blob/main/checklist/MATURITY-LEVELS.md)
 ```
+
+---
+
+## 💬 Questions & Community
+
+- **Got a question or want to share your setup?** Open a thread in [GitHub Discussions](https://github.com/devcaiada/devbible/discussions) (the **Q&A** category is for questions, **Show and tell** for your own audits and results).
+- **Found DevBible useful?** A ⭐ on the repository helps other builders find it.
 
 ---
 
