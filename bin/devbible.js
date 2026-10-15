@@ -46,6 +46,22 @@ const CHECKLIST_ITEMS = [
   { id: '20', name: 'Custom 404 Error Page', level: 1, file: '20-404-error-page.md' },
 ];
 
+const AVAILABLE_TEMPLATES = [
+  { name: 'express-error-handler', file: 'templates/error-handler/express-error-handler.ts', target: 'express-error-handler.ts', desc: 'Centralized Express error middleware & status codes' },
+  { name: 'fastapi-error-handler', file: 'templates/error-handler/fastapi-error-handler.py', target: 'fastapi-error-handler.py', desc: 'FastAPI exception handlers & structured JSON response' },
+  { name: 'pino-logger', file: 'templates/logging-config/pino-logger.ts', target: 'pino-logger.ts', desc: 'High-performance Pino structured JSON logger with correlation IDs' },
+  { name: 'python-structlog', file: 'templates/logging-config/python-structlog.py', target: 'python-structlog.py', desc: 'Python structlog JSON logger with correlation ID context' },
+  { name: 'docker-compose', file: 'templates/docker-compose/docker-compose.prod.yml', target: 'docker-compose.prod.yml', desc: 'Production multi-container stack (App + Postgres + Redis + Caddy SSL)' },
+  { name: 'checklist', file: 'checklist/PROJECT-REVIEW-CHECKLIST.md', target: 'CHECKLIST.md', desc: 'Interactive 20-point production audit sheet' },
+  { name: 'health-check', file: 'templates/health-check/health-check.ts', target: 'health-check.ts', desc: 'Express / Node.js liveness (/healthz) and readiness (/readyz) router' },
+  { name: 'fastapi-health-check', file: 'templates/health-check/fastapi-health-check.py', target: 'fastapi-health-check.py', desc: 'FastAPI /healthz and /readyz probes with DB ping' },
+  { name: 'security-headers', file: 'templates/security-headers/security-headers.ts', target: 'security-headers.ts', desc: 'Production security headers (Helmet CSP/HSTS & Next.js config)' },
+  { name: 'next-error-boundary', file: 'templates/next-error-boundary/error.tsx', target: 'app/error.tsx', desc: 'Next.js App Router error boundary with Sentry reporting' },
+  { name: '404-page', file: 'templates/404-page/404.html', target: '404.html', desc: 'Production Golden Shark 404 HTML error page' },
+  { name: 'next-not-found', file: 'templates/404-page/not-found.tsx', target: 'app/not-found.tsx', desc: 'Next.js App Router app/not-found.tsx with Golden Shark theme' },
+  { name: 'github-ci', file: 'templates/github-ci/devbible-ci.yml', target: '.github/workflows/devbible-ci.yml', desc: 'Production GitHub Actions CI pipeline running DevBible audit' },
+];
+
 function printBanner() {
   console.log(`\n${colors.cyan}${colors.bold}┌────────────────────────────────────────────────────────┐${colors.reset}`);
   console.log(`${colors.cyan}${colors.bold}│                🛡️  DevBible CLI v${VERSION}${' '.repeat(Math.max(1, 23 - VERSION.length))}│${colors.reset}`);
@@ -53,50 +69,83 @@ function printBanner() {
   console.log(`${colors.cyan}${colors.bold}└────────────────────────────────────────────────────────┘${colors.reset}\n`);
 }
 
-function findFilesRecursive(dir, maxDepth = 4, currentDepth = 0) {
-  let results = [];
-  if (currentDepth > maxDepth) return results;
+function findFilesRecursive(dir, maxDepth = 5, currentDepth = 0, collected = []) {
+  if (currentDepth > maxDepth || collected.length >= 600) return collected;
 
   try {
     const list = fs.readdirSync(dir);
     for (const file of list) {
-      if (file === 'node_modules' || file === '.git' || file === '.next' || file === 'dist' || file === 'build') {
+      if (
+        file === 'node_modules' ||
+        file === '.git' ||
+        file === '.next' ||
+        file === 'dist' ||
+        file === 'build' ||
+        file === '.turbo' ||
+        file === '.venv' ||
+        file === '__pycache__' ||
+        file === '.cache'
+      ) {
         continue;
       }
       const filePath = path.join(dir, file);
       const stat = fs.statSync(filePath);
       if (stat && stat.isDirectory()) {
-        results = results.concat(findFilesRecursive(filePath, maxDepth, currentDepth + 1));
+        findFilesRecursive(filePath, maxDepth, currentDepth + 1, collected);
       } else {
-        results.push(filePath);
+        collected.push(filePath);
       }
+      if (collected.length >= 600) break;
     }
   } catch (err) {
-    // Ignore read errors for inaccessible dirs
+    // Ignore read errors for restricted dirs
   }
-  return results;
+  return collected;
 }
 
-function readFileSafe(filePath) {
+function readFileSafe(filePath, maxBytes = 100 * 1024) {
   try {
-    return fs.readFileSync(filePath, 'utf8');
+    const fd = fs.openSync(filePath, 'r');
+    const buffer = Buffer.alloc(maxBytes);
+    const bytesRead = fs.readSync(fd, buffer, 0, maxBytes, 0);
+    fs.closeSync(fd);
+    return buffer.toString('utf8', 0, bytesRead);
   } catch {
     return '';
   }
 }
 
-function auditCodebase(targetDir = '.', options = {}) {
+function auditCodebase(targetDirOrOptions = '.', options = {}) {
+  let targetDir = '.';
+  let opts = {};
+  if (typeof targetDirOrOptions === 'string') {
+    targetDir = targetDirOrOptions;
+    opts = options || {};
+  } else if (typeof targetDirOrOptions === 'object' && targetDirOrOptions !== null) {
+    targetDir = targetDirOrOptions.targetDir || '.';
+    opts = targetDirOrOptions;
+  }
+
   const root = path.resolve(targetDir);
-  if (!options.json) {
+  const format = opts.json ? 'json' : (opts.format || 'text');
+  const strict = Boolean(opts.strict);
+  const targetLevel = opts.level ? parseInt(opts.level, 10) : null;
+  const outputFile = opts.output || null;
+
+  if (format === 'text' && !opts.quiet) {
     printBanner();
     console.log(`${colors.bold}🔍 Auditing codebase at:${colors.reset} ${colors.dim}${root}${colors.reset}\n`);
   }
 
   const files = findFilesRecursive(root);
   const fileNames = files.map((f) => path.basename(f).toLowerCase());
-  const allContents = files
-    .filter((f) => /\.(ts|js|tsx|jsx|py|go|json|yml|yaml|env|md)$/i.test(f))
-    .slice(0, 50)
+
+  // Aggregate source and configuration contents
+  const relevantFiles = files.filter((f) =>
+    /\.(ts|js|tsx|jsx|py|go|json|yml|yaml|env|md|toml|ini|cfg)$/i.test(f)
+  );
+
+  const allContents = relevantFiles
     .map((f) => readFileSafe(f))
     .join('\n');
 
@@ -105,57 +154,53 @@ function auditCodebase(targetDir = '.', options = {}) {
   const reqTxtPath = path.join(root, 'requirements.txt');
   const reqContent = readFileSafe(reqTxtPath);
 
-  const checks = [];
-
-  // Helper check evaluators
+  // Evaluators
   function check01() {
-    // Error Handling
     const hasMiddleware =
-      /errorHandler|AppError|HTTPException|exception_handler|recover\(\)|errorHandlingMiddleware/i.test(allContents);
+      /errorHandler|AppError|HTTPException|exception_handler|recover\(\)|errorHandlingMiddleware|errorBoundary|catch\s*\(|onError/i.test(allContents);
     return hasMiddleware ? 'PASS' : 'FAIL';
   }
 
   function check02() {
-    // Logging
     const hasLogger =
-      /pino|winston|structlog|log\/slog|loguru|logrus|correlation-id|requestId/i.test(allContents) ||
-      /"pino"|"winston"/i.test(pkgContent);
+      /pino|winston|structlog|log\/slog|loguru|logrus|correlation-id|requestId|x-request-id/i.test(allContents) ||
+      /"pino"|"winston"|"bunyan"|"morgan"/i.test(pkgContent);
     return hasLogger ? 'PASS' : 'WARN';
   }
 
   function check03() {
-    // DB Backup
     const hasBackup =
-      /backup|pg_dump|mongodump|pitr|litestream|wal-g/i.test(allContents) ||
+      /backup|pg_dump|mongodump|pitr|litestream|wal-g|snapshot/i.test(allContents) ||
       fileNames.some((f) => f.includes('backup'));
     return hasBackup ? 'PASS' : 'WARN';
   }
 
   function check04() {
-    // Staging
-    const hasEnvExample = fileNames.includes('.env.example') || fileNames.includes('.env.sample');
+    const hasEnvExample =
+      fileNames.includes('.env.example') ||
+      fileNames.includes('.env.sample') ||
+      fileNames.includes('.env.template');
     return hasEnvExample ? 'PASS' : 'FAIL';
   }
 
   function check05() {
-    // Monitoring & APM
     const hasMonitoring =
-      /sentry|datadog|highlight\.io|uptime|healthz|readyz|newrelic|prometheus/i.test(allContents) ||
+      /sentry|datadog|highlight\.io|uptime|healthz|readyz|newrelic|prometheus|grafana|health-check/i.test(allContents) ||
       /"@sentry/i.test(pkgContent) ||
-      /sentry-sdk/i.test(reqContent);
+      /sentry-sdk/i.test(reqContent) ||
+      fileNames.includes('health-check.ts') ||
+      fileNames.includes('healthz.ts');
     return hasMonitoring ? 'PASS' : 'WARN';
   }
 
   function check06() {
-    // Analytics
     const hasAnalytics =
-      /posthog|plausible|mixpanel|segment|umami|analytics/i.test(allContents) ||
+      /posthog|plausible|mixpanel|segment|umami|analytics|gtag/i.test(allContents) ||
       /"posthog-js"|"@vercel\/analytics"/i.test(pkgContent);
     return hasAnalytics ? 'PASS' : 'WARN';
   }
 
   function check07() {
-    // Rate Limiting
     const hasRateLimit =
       /rate-limit|express-rate-limit|slowapi|tollbooth|upstash\/ratelimit|redis/i.test(allContents) ||
       /"express-rate-limit"/i.test(pkgContent);
@@ -163,28 +208,26 @@ function auditCodebase(targetDir = '.', options = {}) {
   }
 
   function check08() {
-    // Access Control
     const hasRbac =
-      /tenant_id|org_id|organizationId|role|permission|requireAuth|can\(|casl|oso/i.test(allContents);
+      /tenant_id|org_id|organizationId|role|permission|requireAuth|can\(|casl|oso|rbac|policies/i.test(allContents);
     return hasRbac ? 'PASS' : 'WARN';
   }
 
   function check09() {
-    // Password Reset
     const hasReset =
-      /resetPassword|forgotPassword|reset_token|crypto\.randomBytes|argon2|bcrypt/i.test(allContents);
+      /resetPassword|forgotPassword|reset_token|crypto\.randomBytes|argon2|bcrypt|scrypt/i.test(allContents);
     return hasReset ? 'PASS' : 'WARN';
   }
 
   function check10() {
-    // Loading States
     const hasSkeleton =
-      /Skeleton|animate-pulse|loading|Spinner|Suspense/i.test(allContents);
+      /Skeleton|animate-pulse|loading|Spinner|Suspense/i.test(allContents) ||
+      fileNames.includes('loading.tsx') ||
+      fileNames.includes('loading.jsx');
     return hasSkeleton ? 'PASS' : 'WARN';
   }
 
   function check11() {
-    // Error Boundaries
     const hasBoundary =
       /ErrorBoundary|error\.tsx|react-error-boundary|onErrorCaptured/i.test(allContents) ||
       fileNames.includes('error.tsx') ||
@@ -193,7 +236,6 @@ function auditCodebase(targetDir = '.', options = {}) {
   }
 
   function check12() {
-    // Responsiveness
     const hasResponsive =
       /viewport|sm:|md:|lg:|@media|mobile/i.test(allContents) ||
       fileNames.includes('tailwind.config.js') ||
@@ -202,16 +244,14 @@ function auditCodebase(targetDir = '.', options = {}) {
   }
 
   function check13() {
-    // Backend Validation
     const hasValidation =
-      /zod|pydantic|typebox|valibot|joi|express-validator|validator/i.test(allContents) ||
+      /zod|pydantic|typebox|valibot|joi|express-validator|validator|marshmallow/i.test(allContents) ||
       /"zod"/i.test(pkgContent) ||
       /pydantic/i.test(reqContent);
     return hasValidation ? 'PASS' : 'FAIL';
   }
 
   function check14() {
-    // Migrations
     const hasMigrations =
       fileNames.includes('schema.prisma') ||
       fileNames.includes('alembic.ini') ||
@@ -221,14 +261,12 @@ function auditCodebase(targetDir = '.', options = {}) {
   }
 
   function check15() {
-    // Rollback / Feature Flags
     const hasRollback =
-      /featureFlag|isFeatureEnabled|launchdarkly|unleash|posthog\.isFeatureEnabled|rollback/i.test(allContents);
+      /featureFlag|isFeatureEnabled|launchdarkly|unleash|posthog\.isFeatureEnabled|rollback|canary|blue-green/i.test(allContents);
     return hasRollback ? 'PASS' : 'WARN';
   }
 
   function check16() {
-    // Automated Testing
     const hasTests =
       /vitest|jest|pytest|playwright|cypress|supertest|testing-library/i.test(allContents) ||
       files.some((f) => /\.(test|spec)\.(ts|js|tsx|jsx|py|go)$/i.test(f));
@@ -236,23 +274,20 @@ function auditCodebase(targetDir = '.', options = {}) {
   }
 
   function check17() {
-    // Privacy Policy
     const hasPrivacy =
-      /privacy|cookie_consent|gdpr|termsfeed|termly/i.test(allContents) ||
+      /privacy|cookie_consent|gdpr|termsfeed|termly|cookie-banner/i.test(allContents) ||
       fileNames.some((f) => f.includes('privacy'));
     return hasPrivacy ? 'PASS' : 'WARN';
   }
 
   function check18() {
-    // Terms of Service
     const hasTerms =
-      /terms|terms-of-service|acceptable-use/i.test(allContents) ||
+      /terms|terms-of-service|acceptable-use|tos/i.test(allContents) ||
       fileNames.some((f) => f.includes('terms'));
     return hasTerms ? 'PASS' : 'WARN';
   }
 
   function check19() {
-    // Image Compression
     const hasImageOpt =
       /next\/image|nuxt-img|sharp|webp|avif|cloudinary|cloudflare-images/i.test(allContents) ||
       /"sharp"/i.test(pkgContent);
@@ -260,7 +295,6 @@ function auditCodebase(targetDir = '.', options = {}) {
   }
 
   function check20() {
-    // 404 Page
     const has404 =
       fileNames.includes('not-found.tsx') ||
       fileNames.includes('not-found.js') ||
@@ -298,26 +332,18 @@ function auditCodebase(targetDir = '.', options = {}) {
   let warnCount = 0;
   let failCount = 0;
 
-  console.log(`${colors.bold}ITEM  TIER     STATUS  CHECKLIST ITEM${colors.reset}`);
-  console.log(`${colors.dim}────────────────────────────────────────────────────────${colors.reset}`);
-
-  CHECKLIST_ITEMS.forEach((item, index) => {
+  const itemResults = CHECKLIST_ITEMS.map((item, index) => {
     const status = evaluators[index]();
-    let statusFormatted = '';
-
-    if (status === 'PASS') {
-      statusFormatted = `${colors.green}✔ PASS${colors.reset} `;
-      passedCount++;
-    } else if (status === 'WARN') {
-      statusFormatted = `${colors.yellow}▲ WARN${colors.reset} `;
-      warnCount++;
-    } else {
-      statusFormatted = `${colors.red}✖ FAIL${colors.reset} `;
-      failCount++;
-    }
-
-    const tierBadge = item.level === 1 ? 'Level 1' : item.level === 2 ? 'Level 2' : 'Level 3';
-    console.log(`[${item.id}]  ${colors.dim}${tierBadge.padEnd(8)}${colors.reset} ${statusFormatted}  ${item.name}`);
+    if (status === 'PASS') passedCount++;
+    else if (status === 'WARN') warnCount++;
+    else failCount++;
+    return {
+      id: item.id,
+      name: item.name,
+      level: item.level,
+      file: item.file,
+      status,
+    };
   });
 
   const total = CHECKLIST_ITEMS.length;
@@ -328,39 +354,159 @@ function auditCodebase(targetDir = '.', options = {}) {
   else if (scorePercent >= 60) maturityAwarded = '🥈 Level 2 (Scale Ready)';
   else if (scorePercent >= 40) maturityAwarded = '🥉 Level 1 (MVP Ready)';
 
+  // Compute top recommended actions
+  const topActions = [];
+  itemResults.forEach((it) => {
+    if (it.status === 'FAIL' && topActions.length < 3) {
+      topActions.push({ id: it.id, name: it.name, type: 'Fix', cmd: `devbible info ${it.id}` });
+    }
+  });
+  if (topActions.length < 3) {
+    itemResults.forEach((it) => {
+      if (it.status === 'WARN' && topActions.length < 3) {
+        topActions.push({ id: it.id, name: it.name, type: 'Enhance', cmd: `devbible info ${it.id}` });
+      }
+    });
+  }
+
+  // Check failures against requested maturity level
+  const failedItems = itemResults.filter((it) => {
+    if (it.status !== 'FAIL') return false;
+    if (targetLevel !== null) return it.level <= targetLevel;
+    return true;
+  });
+
+  const shouldFailBuild = strict && failedItems.length > 0;
+
+  // JSON OUTPUT
+  if (format === 'json') {
+    const jsonOutput = {
+      timestamp: new Date().toISOString(),
+      version: VERSION,
+      targetDir: root,
+      score: scorePercent,
+      maturity: maturityAwarded,
+      maturityTier: maturityAwarded,
+      passed: passedCount,
+      warnings: warnCount,
+      failed: failCount,
+      total,
+      levelFilter: targetLevel,
+      strict,
+      summary: {
+        total,
+        passed: passedCount,
+        warnings: warnCount,
+        failed: failCount,
+      },
+      items: itemResults,
+      results: itemResults,
+      topActions,
+    };
+    const jsonString = JSON.stringify(jsonOutput, null, 2);
+    if (outputFile) {
+      fs.writeFileSync(path.resolve(outputFile), jsonString, 'utf8');
+    }
+    console.log(jsonString);
+    if (shouldFailBuild) process.exit(1);
+    return;
+  }
+
+  // MARKDOWN OUTPUT
+  if (format === 'markdown') {
+    const mdLines = [];
+    mdLines.push('## 🛡️ DevBible Production Readiness Audit Scorecard\n');
+    mdLines.push(`**Target Directory:** \`${path.basename(root)}\`  `);
+    mdLines.push(`**Production Readiness Score:** **${scorePercent}%**  `);
+    mdLines.push(`**Assigned Maturity Tier:** ${maturityAwarded}\n`);
+    mdLines.push('| # | Tier | Status | Checklist Item | Guide Link |');
+    mdLines.push('| :-: | :-: | :-: | :--- | :--- |');
+
+    itemResults.forEach((it) => {
+      const statusIcon = it.status === 'PASS' ? '✅ PASS' : it.status === 'WARN' ? '⚠️ WARN' : '❌ FAIL';
+      const tierBadge = it.level === 1 ? '🥉 Level 1' : it.level === 2 ? '🥈 Level 2' : '🥇 Level 3';
+      mdLines.push(`| **${it.id}** | ${tierBadge} | ${statusIcon} | ${it.name} | [Guide](checklist/${it.file}) |`);
+    });
+
+    mdLines.push('\n### 📊 Summary');
+    mdLines.push(`- **Passed:** ${passedCount} / ${total}`);
+    mdLines.push(`- **Warnings:** ${warnCount}`);
+    mdLines.push(`- **Failures:** ${failCount}`);
+
+    if (topActions.length > 0) {
+      mdLines.push('\n### 🎯 Top Recommended Next Steps');
+      topActions.forEach((act, idx) => {
+        mdLines.push(`${idx + 1}. **${act.type} [${act.id}] ${act.name}**: \`npx ${act.cmd}\``);
+      });
+    }
+
+    mdLines.push('\n---\n*Report generated automatically by [DevBible CLI](https://github.com/devcaiada/devbible)*');
+
+    const mdString = mdLines.join('\n');
+    if (outputFile) {
+      fs.writeFileSync(path.resolve(outputFile), mdString, 'utf8');
+      console.log(`${colors.green}✔ Markdown report saved to: ${outputFile}${colors.reset}`);
+    }
+    console.log(mdString);
+    if (shouldFailBuild) process.exit(1);
+    return;
+  }
+
+  // DEFAULT: TEXT CONSOLE OUTPUT
+  console.log(`${colors.bold}ITEM  TIER     STATUS  CHECKLIST ITEM${colors.reset}`);
+  console.log(`${colors.dim}────────────────────────────────────────────────────────${colors.reset}`);
+
+  itemResults.forEach((it) => {
+    let statusFormatted = '';
+    if (it.status === 'PASS') {
+      statusFormatted = `${colors.green}✔ PASS${colors.reset} `;
+    } else if (it.status === 'WARN') {
+      statusFormatted = `${colors.yellow}▲ WARN${colors.reset} `;
+    } else {
+      statusFormatted = `${colors.red}✖ FAIL${colors.reset} `;
+    }
+
+    const tierBadge = it.level === 1 ? 'Level 1' : it.level === 2 ? 'Level 2' : 'Level 3';
+    console.log(`[${it.id}]  ${colors.dim}${tierBadge.padEnd(8)}${colors.reset} ${statusFormatted}  ${it.name}`);
+  });
+
   console.log(`\n${colors.dim}────────────────────────────────────────────────────────${colors.reset}`);
   console.log(`${colors.bold}📊 AUDIT SUMMARY:${colors.reset}`);
   console.log(`   Passed: ${colors.green}${passedCount}${colors.reset}  |  Warnings: ${colors.yellow}${warnCount}${colors.reset}  |  Failed: ${colors.red}${failCount}${colors.reset}`);
   console.log(`   Production Readiness Score: ${colors.bold}${colors.cyan}${scorePercent}%${colors.reset}`);
   console.log(`   Assigned Maturity Tier:     ${colors.bold}${maturityAwarded}${colors.reset}\n`);
 
-  console.log(`${colors.bold}🎯 TOP 3 RECOMMENDED NEXT ACTIONS:${colors.reset}`);
-  let actionIdx = 1;
-  CHECKLIST_ITEMS.forEach((item, index) => {
-    const status = evaluators[index]();
-    if (status === 'FAIL' && actionIdx <= 3) {
-      console.log(`   ${actionIdx}. ${colors.yellow}Fix [${item.id}] ${item.name}${colors.reset} -> Run 'devbible info ${item.id}'`);
-      actionIdx++;
-    }
-  });
-
-  if (actionIdx <= 3) {
-    CHECKLIST_ITEMS.forEach((item, index) => {
-      const status = evaluators[index]();
-      if (status === 'WARN' && actionIdx <= 3) {
-        console.log(`   ${actionIdx}. ${colors.cyan}Enhance [${item.id}] ${item.name}${colors.reset} -> Run 'devbible info ${item.id}'`);
-        actionIdx++;
-      }
+  if (topActions.length > 0) {
+    console.log(`${colors.bold}🎯 TOP 3 RECOMMENDED NEXT ACTIONS:${colors.reset}`);
+    topActions.forEach((act, idx) => {
+      const color = act.type === 'Fix' ? colors.yellow : colors.cyan;
+      console.log(`   ${idx + 1}. ${color}${act.type} [${act.id}] ${act.name}${colors.reset} -> Run '${act.cmd}'`);
     });
   }
 
   console.log(`\n${colors.dim}💡 Tip: Use 'devbible scaffold <template>' to generate missing boilerplate.${colors.reset}\n`);
+
+  if (outputFile) {
+    const textReport = [
+      `DevBible Audit Score: ${scorePercent}% (${maturityAwarded})`,
+      `Passed: ${passedCount} | Warnings: ${warnCount} | Failed: ${failCount}`,
+    ].join('\n');
+    fs.writeFileSync(path.resolve(outputFile), textReport, 'utf8');
+    console.log(`${colors.green}✔ Audit summary saved to: ${outputFile}${colors.reset}\n`);
+  }
+
+  if (shouldFailBuild) {
+    console.log(`${colors.red}${colors.bold}❌ Audit failed: ${failedItems.length} checklist item(s) failed strict verification.${colors.reset}\n`);
+    process.exit(1);
+  }
 }
 
-function listItems() {
+function listItems(options = {}) {
   printBanner();
-  console.log(`${colors.bold}📋 All 20 Production Readiness Checklist Items:${colors.reset}\n`);
-  CHECKLIST_ITEMS.forEach((item) => {
+  const filterLevel = options.level ? parseInt(options.level, 10) : null;
+  console.log(`${colors.bold}📋 Production Readiness Checklist Items:${colors.reset}\n`);
+
+  CHECKLIST_ITEMS.filter((item) => (filterLevel ? item.level === filterLevel : true)).forEach((item) => {
     const tier = item.level === 1 ? `${colors.blue}Level 1 (MVP)` : item.level === 2 ? `${colors.green}Level 2 (Scale)` : `${colors.magenta}Level 3 (Enterprise)`;
     console.log(`  [${item.id}] ${item.name.padEnd(36)} ${tier}${colors.reset}`);
   });
@@ -391,89 +537,120 @@ function showInfo(idOrNumber) {
 
 function scaffoldTemplate(templateName, dest = '.') {
   printBanner();
-  const templatesDir = path.join(__dirname, '..', 'templates');
-  const availableTemplates = [
-    'express-error-handler',
-    'fastapi-error-handler',
-    'pino-logger',
-    'python-structlog',
-    'docker-compose',
-    'checklist',
-  ];
+  const templateObj = AVAILABLE_TEMPLATES.find(
+    (t) => t.name.toLowerCase() === (templateName || '').toLowerCase()
+  );
 
-  if (!templateName || !availableTemplates.includes(templateName.toLowerCase())) {
-    console.log(`${colors.yellow}Available templates to scaffold:${colors.reset}`);
-    availableTemplates.forEach((t) => console.log(`  - ${t}`));
-    console.log(`\nUsage: devbible scaffold <template-name>\n`);
+  if (!templateObj) {
+    console.log(`${colors.yellow}Available templates to scaffold:${colors.reset}\n`);
+    AVAILABLE_TEMPLATES.forEach((t) => {
+      console.log(`  - ${colors.cyan}${t.name.padEnd(24)}${colors.reset} ${colors.dim}${t.desc}${colors.reset}`);
+    });
+    console.log(`\nUsage: devbible scaffold <template-name> [destDir]\n`);
     return;
   }
 
-  const destPath = path.resolve(dest);
+  const rootDir = path.join(__dirname, '..');
+  const srcPath = path.join(rootDir, templateObj.file);
 
-  if (templateName === 'express-error-handler') {
-    const src = path.join(templatesDir, 'error-handler', 'express-error-handler.ts');
-    const target = path.join(destPath, 'express-error-handler.ts');
-    fs.copyFileSync(src, target);
-    console.log(`${colors.green}✔ Scaffolded express-error-handler.ts to ${target}${colors.reset}\n`);
-  } else if (templateName === 'fastapi-error-handler') {
-    const src = path.join(templatesDir, 'error-handler', 'fastapi-error-handler.py');
-    const target = path.join(destPath, 'fastapi-error-handler.py');
-    fs.copyFileSync(src, target);
-    console.log(`${colors.green}✔ Scaffolded fastapi-error-handler.py to ${target}${colors.reset}\n`);
-  } else if (templateName === 'pino-logger') {
-    const src = path.join(templatesDir, 'logging-config', 'pino-logger.ts');
-    const target = path.join(destPath, 'pino-logger.ts');
-    fs.copyFileSync(src, target);
-    console.log(`${colors.green}✔ Scaffolded pino-logger.ts to ${target}${colors.reset}\n`);
-  } else if (templateName === 'python-structlog') {
-    const src = path.join(templatesDir, 'logging-config', 'python-structlog.py');
-    const target = path.join(destPath, 'python-structlog.py');
-    fs.copyFileSync(src, target);
-    console.log(`${colors.green}✔ Scaffolded python-structlog.py to ${target}${colors.reset}\n`);
-  } else if (templateName === 'docker-compose') {
-    const src = path.join(templatesDir, 'docker-compose', 'docker-compose.prod.yml');
-    const target = path.join(destPath, 'docker-compose.prod.yml');
-    fs.copyFileSync(src, target);
-    console.log(`${colors.green}✔ Scaffolded docker-compose.prod.yml to ${target}${colors.reset}\n`);
-  } else if (templateName === 'checklist') {
-    const src = path.join(__dirname, '..', 'checklist', 'PROJECT-REVIEW-CHECKLIST.md');
-    const target = path.join(destPath, 'CHECKLIST.md');
-    fs.copyFileSync(src, target);
-    console.log(`${colors.green}✔ Scaffolded CHECKLIST.md to ${target}${colors.reset}\n`);
+  if (!fs.existsSync(srcPath)) {
+    console.log(`${colors.red}Error: Source template file not found at ${srcPath}${colors.reset}\n`);
+    return;
   }
+
+  const targetPath = path.join(path.resolve(dest), templateObj.target);
+  const targetDir = path.dirname(targetPath);
+
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+
+  fs.copyFileSync(srcPath, targetPath);
+  console.log(`${colors.green}✔ Successfully scaffolded ${templateObj.name} to:${colors.reset}`);
+  console.log(`  ${colors.bold}${targetPath}${colors.reset}\n`);
 }
 
 function showHelp() {
   printBanner();
   console.log(`${colors.bold}Commands:${colors.reset}`);
-  console.log(`  ${colors.cyan}devbible audit [path] [--json]${colors.reset} Scan codebase and calculate readiness score (--json: machine-readable)`);
-  console.log(`  ${colors.cyan}devbible list${colors.reset}                  List all 20 checklist items & maturity levels`);
-  console.log(`  ${colors.cyan}devbible info <01-20>${colors.reset}          Show guide and best practices for an item`);
-  console.log(`  ${colors.cyan}devbible scaffold <template>${colors.reset}   Copy production template into your project`);
-  console.log(`  ${colors.cyan}devbible help${colors.reset}                  Display this help message\n`);
-  console.log(`${colors.bold}Templates available for scaffolding:${colors.reset}`);
-  console.log(`  express-error-handler, fastapi-error-handler, pino-logger, python-structlog, docker-compose, checklist\n`);
+  console.log(`  ${colors.cyan}devbible audit [path] [flags]${colors.reset}   Scan codebase and calculate readiness score`);
+  console.log(`  ${colors.cyan}devbible list [flags]${colors.reset}           List checklist items & maturity levels`);
+  console.log(`  ${colors.cyan}devbible info <01-20>${colors.reset}           Show guide and best practices for an item`);
+  console.log(`  ${colors.cyan}devbible scaffold <template>${colors.reset}    Copy production boilerplate into project`);
+  console.log(`  ${colors.cyan}devbible help${colors.reset}                   Display this help message\n`);
+
+  console.log(`${colors.bold}Audit Flags:${colors.reset}`);
+  console.log(`  ${colors.green}--strict${colors.reset}                        Exit with code 1 if any checklist item fails`);
+  console.log(`  ${colors.green}--level <1|2|3>${colors.reset}                 Filter checks to target maturity level (1=MVP, 2=Scale, 3=Enterprise)`);
+  console.log(`  ${colors.green}--format <text|json|markdown>${colors.reset} Output format (default: text)`);
+  console.log(`  ${colors.green}--json${colors.reset}                          Shortcut for --format json`);
+  console.log(`  ${colors.green}--markdown${colors.reset}                      Shortcut for --format markdown (ideal for PR comments)`);
+  console.log(`  ${colors.green}--output <file>${colors.reset}                 Write report directly to specified file`);
+  console.log(`  ${colors.green}--quiet, -q${colors.reset}                    Suppress banner output\n`);
+
+  console.log(`${colors.bold}Available Scaffolding Templates:${colors.reset}`);
+  AVAILABLE_TEMPLATES.forEach((t) => {
+    console.log(`  ${colors.cyan}${t.name.padEnd(24)}${colors.reset} ${t.desc}`);
+  });
+  console.log('');
 }
 
-// CLI Argument Router
-const jsonMode = process.argv.includes('--json');
-const args = process.argv.slice(2).filter((a) => a !== '--json');
-const command = args[0] ? args[0].toLowerCase() : 'audit';
+// Argument Parser
+const rawArgs = process.argv.slice(2);
+let command = 'audit';
+let targetParam = null;
+const parsedOptions = {
+  strict: false,
+  level: null,
+  format: 'text',
+  output: null,
+  quiet: false,
+};
+
+for (let i = 0; i < rawArgs.length; i++) {
+  const arg = rawArgs[i];
+  if (arg === '--strict') {
+    parsedOptions.strict = true;
+  } else if (arg === '--json') {
+    parsedOptions.format = 'json';
+  } else if (arg === '--markdown' || arg === '--md') {
+    parsedOptions.format = 'markdown';
+  } else if (arg === '--quiet' || arg === '-q') {
+    parsedOptions.quiet = true;
+  } else if (arg === '--format' && rawArgs[i + 1]) {
+    parsedOptions.format = rawArgs[++i].toLowerCase();
+  } else if (arg === '--level' && rawArgs[i + 1]) {
+    parsedOptions.level = rawArgs[++i];
+  } else if (arg === '--output' && rawArgs[i + 1]) {
+    parsedOptions.output = rawArgs[++i];
+  } else if (!arg.startsWith('-')) {
+    if (!command || command === 'audit') {
+      if (['audit', 'list', 'ls', 'info', 'scaffold', 'init', 'help'].includes(arg.toLowerCase())) {
+        command = arg.toLowerCase();
+      } else {
+        targetParam = arg;
+      }
+    } else if (!targetParam) {
+      targetParam = arg;
+    }
+  }
+}
 
 switch (command) {
   case 'audit':
-    auditCodebase(args[1] || '.', { json: jsonMode });
+    parsedOptions.targetDir = targetParam || '.';
+    auditCodebase(parsedOptions);
     break;
   case 'list':
   case 'ls':
-    listItems();
+    listItems(parsedOptions);
     break;
   case 'info':
-    showInfo(args[1] || '01');
+    showInfo(targetParam || '01');
     break;
   case 'scaffold':
   case 'init':
-    scaffoldTemplate(args[1], args[2] || '.');
+    scaffoldTemplate(targetParam, rawArgs[rawArgs.indexOf(targetParam) + 1] || '.');
     break;
   case 'help':
   case '--help':

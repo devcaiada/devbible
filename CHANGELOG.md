@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] - 2026-10-15
+
+### 🚀 Golden Shark 404 & Expanded Boilerplates
+
+#### Added
+- **Golden Shark 404 Experience**:
+  - Full-featured, responsive, dark-mode `404.html` and Next.js App Router `app/not-found.tsx` with Golden Shark Level 3 branding.
+  - High-resolution 3D mascot artwork (`assets/images/404_golden_shark.png`).
+  - Added `404-page` and `next-not-found` to `devbible scaffold`.
+  - Achieved **100% Production Readiness Score (20/20 PASS)** on DevBible itself.
+- **CLI Capabilities**:
+  - `--strict` flag: exits with non-zero code if any checklist item fails.
+  - `--level <1|2|3>` flag: filters checklist evaluation to target maturity tier (e.g. `--level 1` for MVP foundation).
+  - `--markdown`: shortcut for `--format markdown`.
+  - `--output <file>`: direct output export to specified file.
+  - Deep codebase scanning removing arbitrary file limits.
+- **Production Boilerplate Templates**:
+  - `health-check`: Node.js/Express liveness (`/healthz`) and deep readiness (`/readyz`) check router with DB/cache ping.
+  - `fastapi-health-check`: FastAPI async health router with database ping and uptime tracking.
+  - `security-headers`: Production Helmet configuration with strict CSP/HSTS and Next.js `headers()` config.
+  - `next-error-boundary`: Next.js App Router `app/error.tsx` boundary with Sentry reporting and user recovery actions.
+  - `github-ci`: Production GitHub Actions workflow running automated DevBible audit with automated PR comment reporting.
+- **Documentation & Agent Skills**:
+  - Updated `skills/devbible-audit/SKILL.md` with new scaffolding commands.
+  - Complete English translation across all prompt resources and README sections.
+
+---
+
 ## [1.1.1] - 2026-10-15
 
 ### Fixed

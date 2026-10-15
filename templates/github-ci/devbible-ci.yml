@@ -1,0 +1,95 @@
+name: CI & Production Readiness Gate
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-and-audit:
+    name: Lint, Test & DevBible Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Codebase
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🟢 Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: 📦 Install Dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          elif [ -f pnpm-lock.yaml ]; then
+            corepack enable && pnpm install --frozen-lockfile
+          elif [ -f yarn.lock ]; then
+            yarn install --frozen-lockfile
+          else
+            npm install
+          fi
+
+      - name: 🔍 Type Check & Lint
+        run: |
+          if grep -q '"lint"' package.json; then
+            npm run lint
+          fi
+
+      - name: 🧪 Automated Test Suite
+        run: |
+          if grep -q '"test"' package.json; then
+            npm test
+          fi
+
+      - name: 🛡️ DevBible Production Readiness Audit
+        id: devbible
+        run: |
+          # Run DevBible Audit with strict Level 1 (MVP foundation) enforcement
+          # Generates a Markdown report and streams directly to GitHub Job Step Summary
+          npx devbible audit --format markdown --output devbible-report.md --strict --level 1
+          cat devbible-report.md >> $GITHUB_STEP_SUMMARY
+
+      - name: 💬 Post PR Comment with DevBible Audit Score
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            if (fs.existsSync('devbible-report.md')) {
+              const report = fs.readFileSync('devbible-report.md', 'utf8');
+              const body = `### 🛡️ DevBible Automated Production Audit\n\n${report}\n\n*Audited by [DevBible CLI](https://github.com/devcaiada/devbible)*`;
+              
+              // Find existing DevBible comment or create new one
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+              });
+              
+              const botComment = comments.find(c => c.body.includes('DevBible Automated Production Audit'));
+              if (botComment) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id,
+                  body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body,
+                });
+              }
+            }

@@ -1,6 +1,6 @@
 {
   "name": "devbible",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "The ultimate open-source production-readiness checklist, skills reference, and automated codebase auditor for vibecoders and modern builders.",
   "main": "bin/devbible.js",
   "bin": {
@@ -9,6 +9,9 @@
   "type": "commonjs",
   "scripts": {
     "audit": "node ./bin/devbible.js audit",
+    "audit:strict": "node ./bin/devbible.js audit --strict --level 1",
+    "audit:json": "node ./bin/devbible.js audit --json",
+    "audit:md": "node ./bin/devbible.js audit --markdown",
     "list": "node ./bin/devbible.js list",
     "test": "node ./bin/devbible.js audit ."
   },
